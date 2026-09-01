@@ -13,3 +13,10 @@ fender
 yamaha
 gibson
 atlantic
+# spurious subword/embedding-token overlap near "paperclip" (crippling, clipper)
+# and proper nouns that slipped past the PROPN tagger near "paperclip"/"graffiti"
+# (ukip, picasso). See Phase 1.5 continuation report.
+crippling
+clipper
+ukip
+picasso
