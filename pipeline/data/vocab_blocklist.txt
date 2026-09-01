@@ -1,0 +1,15 @@
+# Words dropped from the vocabulary regardless of POS tag: brand names, person
+# names, and place names that leaked into top-20 rankings via topical/brand
+# association rather than genuine semantic similarity (e.g. "fender"/"gibson"/
+# "hendrix" near "guitar", "bermuda" near "ocean", "nhs" near "hospital").
+# See build_vocabulary.py.
+bermuda
+hendrix
+nhs
+prague
+rothschild
+schwarzenegger
+fender
+yamaha
+gibson
+atlantic

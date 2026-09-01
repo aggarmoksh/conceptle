@@ -1,0 +1,6 @@
+# Words to keep even if spaCy's PROPN tagger (run on isolated single words, no
+# sentence context) misclassifies them as proper nouns. See build_vocabulary.py.
+fragrance
+mammoth
+mural
+buffet

@@ -15,7 +15,14 @@ Filtering applied, in order:
      [Likely] incomplete: wordfreq has no part-of-speech or named-entity tagging, so this
      is a manual, non-exhaustive pass. The Phase 1 sanity check is the backstop.
   5. Truncate to TARGET_SIZE (this is the pre-lemmatization vocabulary size).
-  6. Lemmatize every surviving word with spaCy's POS-aware lemmatizer (en_core_web_sm,
+  6. Drop anything in pipeline/data/vocab_blocklist.txt regardless of POS tag (Phase
+     1.5 final pass): brand names, person names, and place names that survived both
+     the in-code BLOCKLIST and the PROPN filter and turned up as top-20 contamination
+     via topical/brand association rather than genuine meaning (e.g. "fender" and
+     "gibson" near "guitar", "bermuda" near "ocean"). This is a manually curated,
+     project-specific list distinct from BLOCKLIST above; see that file for entries
+     and the "Accepted trade" reasoning per entry.
+  7. Lemmatize every surviving word with spaCy's POS-aware lemmatizer (en_core_web_sm,
      tagger + attribute_ruler + lemmatizer only, parser/NER disabled for speed) and
      dedupe by lemma, keeping the earliest (highest-frequency) surface form's position
      to decide final ordering. This is what collapses inflectional variants like
@@ -29,6 +36,12 @@ Filtering applied, in order:
      their base form (e.g. "geese" was misread as a proper noun and stayed unlemmatized
      instead of merging into "goose" in spot checks). Rare, and caught by review/reruns,
      not solved by a bigger model for this MVP.
+  8. pipeline/data/vocab_whitelist.txt overrides step 7's PROPN drop for specific
+     words the tagger got wrong in isolation (e.g. "fragrance", "mammoth", "mural",
+     "buffet" were all misread as proper nouns with no sentence context to disambiguate).
+     A whitelisted word still goes through every other filter (alpha, length,
+     BLOCKLIST, vocab_blocklist.txt, lemma dedup) normally; only the PROPN drop is
+     skipped for it.
 
 Run: .venv/Scripts/python.exe pipeline/build_vocabulary.py
 """
@@ -44,9 +57,21 @@ from wordfreq import top_n_list
 TARGET_SIZE = 20000
 RAW_POOL_SIZE = 32000
 OUTPUT_PATH = "pipeline/data/vocabulary.txt"
+WHITELIST_PATH = "pipeline/data/vocab_whitelist.txt"
+EXTERNAL_BLOCKLIST_PATH = "pipeline/data/vocab_blocklist.txt"
 REPORT_SEED = 2026  # for the reproducible PROPN spot-check sample, not gameplay
 
 ALPHA_RE = re.compile(r"^[a-z]+$")
+
+
+def load_word_set(path: str) -> set[str]:
+    """One lowercased word per line; blank lines and lines starting with # ignored."""
+    with open(path, encoding="utf-8") as f:
+        return {
+            line.strip().lower()
+            for line in f
+            if line.strip() and not line.strip().startswith("#")
+        }
 
 # Curated block-list: common proper nouns, brand names, and calendar words that surface
 # high in wordfreq's "common English words" list. Not exhaustive by design (see
@@ -91,7 +116,7 @@ BLOCKLIST = {
 }
 
 
-def build_pre_lemma_vocabulary() -> list[str]:
+def build_pre_lemma_vocabulary(extra_blocklist: set[str]) -> list[str]:
     """Frequency-ranked, filtered, alphabetic vocabulary before lemmatization."""
     raw = top_n_list("en", RAW_POOL_SIZE)
 
@@ -104,7 +129,7 @@ def build_pre_lemma_vocabulary() -> list[str]:
             continue
         if len(word) < 3:
             continue
-        if word in BLOCKLIST:
+        if word in BLOCKLIST or word in extra_blocklist:
             continue
         seen.add(word)
         candidates.append(word)
@@ -116,17 +141,24 @@ def build_pre_lemma_vocabulary() -> list[str]:
 
 def lemmatize_dedupe_and_filter_propn(
     words: list[str],
+    whitelist: set[str],
+    extra_blocklist: set[str],
 ) -> tuple[list[str], list[str]]:
     """Lemmatize, drop proper nouns, and collapse inflectional variants to one entry each.
 
     Proper-noun filter (Phase 1.5 task 2): each word is POS-tagged by spaCy in
-    isolation (no sentence context) and dropped if tagged PROPN. This is a second,
-    independent pass over the same manual BLOCKLIST approach in
-    build_pre_lemma_vocabulary() above: the block-list only catches proper nouns
-    someone thought to list by hand, while this catches whatever spaCy's tagger
-    recognizes as a name-like token, at the cost of the tagger's own error rate on
-    single-word (no-context) input, which is the known imperfection to spot-check
-    the returned sample against, per the module docstring's caveat about "geese".
+    isolation (no sentence context) and dropped if tagged PROPN, UNLESS it is in
+    `whitelist` (Phase 1.5 final pass: overrides the PROPN drop for words spaCy
+    got wrong in isolation, e.g. "mammoth"). This is a second, independent pass
+    over the same manual BLOCKLIST approach in build_pre_lemma_vocabulary() above:
+    the block-list only catches proper nouns someone thought to list by hand,
+    while this catches whatever spaCy's tagger recognizes as a name-like token, at
+    the cost of the tagger's own error rate on single-word (no-context) input,
+    which is the known imperfection the whitelist exists to patch.
+
+    `extra_blocklist` (pipeline/data/vocab_blocklist.txt) drops a word unconditionally,
+    regardless of POS tag or whitelist status, checked against both the surface form
+    and its lemma.
 
     Order is preserved by first (highest-frequency) occurrence of each lemma.
     Returns (final_vocabulary, words_dropped_for_being_tagged_propn).
@@ -138,10 +170,15 @@ def lemmatize_dedupe_and_filter_propn(
     removed_propn: list[str] = []
     for doc in nlp.pipe(words, batch_size=512):
         token = doc[0]
-        if token.pos_ == "PROPN":
+        surface = token.text.lower()
+        if surface in extra_blocklist:
+            continue
+        if token.pos_ == "PROPN" and surface not in whitelist:
             removed_propn.append(token.text)
             continue
         lemma = token.lemma_.lower()
+        if lemma in extra_blocklist:
+            continue
         if not ALPHA_RE.match(lemma):
             continue
         if len(lemma) < 3:
@@ -157,12 +194,17 @@ def lemmatize_dedupe_and_filter_propn(
 
 
 def main() -> None:
+    whitelist = load_word_set(WHITELIST_PATH)
+    extra_blocklist = load_word_set(EXTERNAL_BLOCKLIST_PATH)
+    print(f"Loaded {len(whitelist)} whitelist word(s) from {WHITELIST_PATH}: {sorted(whitelist)}")
+    print(f"Loaded {len(extra_blocklist)} blocklist word(s) from {EXTERNAL_BLOCKLIST_PATH}: {sorted(extra_blocklist)}")
+
     print(f"Pulling top {RAW_POOL_SIZE} words from wordfreq...")
-    pre_lemma = build_pre_lemma_vocabulary()
+    pre_lemma = build_pre_lemma_vocabulary(extra_blocklist)
     print(f"Vocab size before lemmatization: {len(pre_lemma)}")
 
     print("Lemmatizing with spaCy (en_core_web_sm), dropping PROPN, and deduping...")
-    vocabulary, removed_propn = lemmatize_dedupe_and_filter_propn(pre_lemma)
+    vocabulary, removed_propn = lemmatize_dedupe_and_filter_propn(pre_lemma, whitelist, extra_blocklist)
     print(f"Vocab size after lemmatization + PROPN filter: {len(vocabulary)}")
     print(f"Words dropped for being tagged PROPN: {len(removed_propn)}")
 
