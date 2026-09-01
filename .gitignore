@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Pipeline artifacts (regeneratable, large)
+pipeline/data/embeddings.npy
+pipeline/output/
+
+# Node / Next.js
+node_modules/
+web/.next/
+web/out/
+web/.env*.local
+web/npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
