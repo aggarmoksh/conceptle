@@ -102,7 +102,6 @@ horizon
 current
 tide
 whirlpool
-stalactite
 
 # --- Animals ---
 dolphin
@@ -248,7 +247,6 @@ pharaoh
 mummy
 sarcophagus
 colosseum
-aqueduct
 parchment
 scroll
 dynasty
@@ -262,7 +260,6 @@ museum
 monument
 sculpture
 mosaic
-fresco
 tapestry
 calligraphy
 origami
