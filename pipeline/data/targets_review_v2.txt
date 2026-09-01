@@ -1,0 +1,358 @@
+# Phase 1.5 target curation review v2, 5-label scheme (claude-sonnet-4-6).
+# Format: LABEL<TAB>word<TAB>note
+# This file is informational only. targets.txt and target_order.txt
+# are NOT modified by this script. Do the final cut manually.
+CONCRETE	umbrella	
+CONCRETE	scissors	
+CONCRETE	backpack	
+CONCRETE	mirror	
+CONCRETE	candle	
+CONCRETE	blanket	
+CONCRETE	wallet	
+CONCRETE	calendar	
+CONCRETE	telescope	
+AMBIGUOUS	compass	navigation tool vs drawing compass vs the verb to encompass
+AMBIGUOUS	anchor	ship anchor (physical) vs news anchor (person) vs abstract stabilizing concept
+CONCRETE	ladder	
+CONCRETE	hammer	
+CONCRETE	wrench	
+AMBIGUOUS	screwdriver	tool vs cocktail drink
+CONCRETE	mattress	
+CONCRETE	pillow	
+CONCRETE	doorbell	
+AMBIGUOUS	keyboard	computer keyboard vs musical keyboard vs typewriter keyboard
+CONCRETE	headphones	
+CONCRETE	suitcase	
+CONCRETE	thermostat	
+CONCRETE	flashlight	
+CONCRETE	toothbrush	
+CONCRETE	stapler	
+CONCRETE	envelope	
+CONCRETE	paperclip	
+CONCRETE	wheelbarrow	
+CONCRETE	chandelier	
+CONCRETE	hourglass	
+CONCRETE	kaleidoscope	
+CONCRETE	thermometer	
+CONCRETE	magnet	
+CONCRETE	padlock	
+CONCRETE	zipper	
+CONCRETE	shoelace	
+CONCRETE	teapot	
+CONCRETE	whistle	
+CONCRETE	lantern	
+CONCRETE	bucket	
+CONCRETE	broom	
+CONCRETE	mop	
+AMBIGUOUS	sponge	cleaning sponge (object) vs sponge cake (food) vs SpongeBob cultural reference
+CONCRETE	clothespin	
+CONCRETE	corkscrew	
+CONCRETE	tweezers	
+CONCRETE	binoculars	
+CONCRETE	stopwatch	
+CONCRETE	tripod	
+CONCRETE	volcano	
+CONCRETE	glacier	
+CONCRETE	waterfall	
+CONCRETE	rainbow	
+CONCRETE	tornado	
+CONCRETE	hurricane	
+CONCRETE	avalanche	
+CONCRETE	earthquake	
+CONCRETE	tsunami	
+AMBIGUOUS	desert	arid landscape vs to desert/abandon (verb) vs dessert spelling confusion aside, still ambiguous as noun/verb
+CONCRETE	jungle	
+CONCRETE	canyon	
+CONCRETE	meadow	
+CONCRETE	marsh	
+AMBIGUOUS	oasis	physical water source in desert vs metaphorical refuge/haven
+CONCRETE	tundra	
+AMBIGUOUS	iceberg	physical ice formation vs common metaphor for hidden bulk of something
+CONCRETE	mountain	
+CONCRETE	valley	
+CONCRETE	island	
+CONCRETE	peninsula	
+CONCRETE	archipelago	
+CONCRETE	lagoon	
+AMBIGUOUS	delta	river delta (geography) vs Greek letter vs Delta airline/brand vs math symbol
+AMBIGUOUS	plateau	geographic landform vs metaphorical leveling off of progress
+CONCRETE	cliff	
+CONCRETE	cave	
+CONCRETE	geyser	
+CONCRETE	blizzard	
+CONCRETE	drought	
+CONCRETE	monsoon	
+AMBIGUOUS	fog	weather phenomenon vs mental fog (abstract confusion)
+CONCRETE	frost	
+CONCRETE	dew	
+CONCRETE	thunder	
+CONCRETE	lightning	
+CONCRETE	sunset	
+CONCRETE	sunrise	
+CONCRETE	eclipse	
+CONCRETE	constellation	
+AMBIGUOUS	horizon	physical line where sky meets earth vs metaphorical limit of one's vision or future
+AMBIGUOUS	current	water/electrical current vs current (adjective meaning present/now)
+AMBIGUOUS	tide	ocean tide vs Tide detergent brand vs metaphorical tide of events
+CONCRETE	whirlpool	
+CONCRETE	dolphin	
+CONCRETE	octopus	
+CONCRETE	penguin	
+CONCRETE	kangaroo	
+CONCRETE	giraffe	
+CONCRETE	elephant	
+CONCRETE	rhinoceros	
+CONCRETE	hedgehog	
+CONCRETE	platypus	
+AMBIGUOUS	chameleon	animal vs metaphor for someone who changes to fit surroundings
+CONCRETE	jellyfish	
+AMBIGUOUS	butterfly	insect vs butterfly stroke (swimming) vs butterfly effect (concept)
+CONCRETE	dragonfly	
+CONCRETE	firefly	
+CONCRETE	honeybee	
+CONCRETE	spider	
+CONCRETE	scorpion	
+CONCRETE	seahorse	
+CONCRETE	starfish	
+CONCRETE	crocodile	
+CONCRETE	alligator	
+CONCRETE	flamingo	
+CONCRETE	peacock	
+CONCRETE	ostrich	
+CONCRETE	armadillo	
+CONCRETE	porcupine	
+CONCRETE	raccoon	
+CONCRETE	otter	
+CONCRETE	beaver	
+CONCRETE	squirrel	
+CONCRETE	hummingbird	
+CONCRETE	woodpecker	
+CONCRETE	falcon	
+AMBIGUOUS	vulture	bird vs metaphor for someone who preys on others
+CONCRETE	walrus	
+CONCRETE	narwhal	
+CONCRETE	koala	
+AMBIGUOUS	sloth	animal vs deadly sin of laziness (abstract)
+CONCRETE	lemur	
+CONCRETE	gazelle	
+CONCRETE	antelope	
+CONCRETE	buffalo	
+CONCRETE	camel	
+CONCRETE	llama	
+CONCRETE	tortoise	
+CONCRETE	cactus	
+CONCRETE	bamboo	
+CONCRETE	sunflower	
+CONCRETE	mushroom	
+CONCRETE	seaweed	
+CONCRETE	fern	
+CONCRETE	orchid	
+CONCRETE	tulip	
+CONCRETE	dandelion	
+CONCRETE	clover	
+CONCRETE	acorn	
+CONCRETE	pinecone	
+CONCRETE	pizza	
+CONCRETE	sushi	
+CONCRETE	pasta	
+CONCRETE	sandwich	
+CONCRETE	pancake	
+AMBIGUOUS	waffle	food item vs to waffle (verb meaning to be indecisive)
+CONCRETE	croissant	
+CONCRETE	baguette	
+CONCRETE	pretzel	
+CONCRETE	popcorn	
+CONCRETE	marshmallow	
+CONCRETE	caramel	
+CONCRETE	chocolate	
+AMBIGUOUS	vanilla	flavor/food vs vanilla (adjective meaning plain/basic/boring)
+CONCRETE	cinnamon	
+CONCRETE	nutmeg	
+CONCRETE	avocado	
+CONCRETE	pineapple	
+CONCRETE	watermelon	
+CONCRETE	strawberry	
+CONCRETE	blueberry	
+CONCRETE	coconut	
+CONCRETE	almond	
+CONCRETE	walnut	
+CONCRETE	peanut	
+AMBIGUOUS	honey	food substance vs term of endearment vs Honey brand name
+CONCRETE	yogurt	
+CONCRETE	omelette	
+CONCRETE	spaghetti	
+CONCRETE	lasagna	
+CONCRETE	dumpling	
+AMBIGUOUS	noodle	food item vs noodle (slang for head/brain)
+AMBIGUOUS	gravity	physical force vs gravity (seriousness/weight as abstract concept)
+AMBIGUOUS	galaxy	astronomical structure vs Galaxy chocolate brand vs Samsung Galaxy
+CONCRETE	asteroid	
+CONCRETE	comet	
+CONCRETE	meteor	
+AMBIGUOUS	orbit	astronomical path vs sphere of influence (abstract) vs to orbit (verb)
+CONCRETE	nebula	
+CONCRETE	supernova	
+CONCRETE	molecule	
+CONCRETE	electron	
+CONCRETE	photon	
+AMBIGUOUS	magnetism	physical force vs personal magnetism/charisma (abstract)
+CONCRETE	electricity	
+AMBIGUOUS	radiation	physical phenomenon vs metaphorical spread of something harmful
+AMBIGUOUS	evolution	biological process vs general concept of gradual change/development
+CONCRETE	bacteria	
+AMBIGUOUS	virus	biological pathogen vs computer virus vs viral content
+CONCRETE	vaccine	
+CONCRETE	chromosome	
+CONCRETE	ecosystem	
+CONCRETE	enzyme	
+CONCRETE	hormone	
+CONCRETE	neuron	
+CONCRETE	skeleton	
+CONCRETE	skull	
+AMBIGUOUS	muscle	body part vs to muscle in/through (verb) vs political muscle (abstract power)
+CONCRETE	tendon	
+CONCRETE	cartilage	
+CONCRETE	kidney	
+CONCRETE	pancreas	
+CONCRETE	esophagus	
+CONCRETE	retina	
+CONCRETE	cornea	
+CONCRETE	eardrum	
+AMBIGUOUS	appendix	body organ vs book appendix (supplementary section)
+CONCRETE	vertebra	
+AMBIGUOUS	pyramid	geometric shape vs ancient Egyptian structure vs pyramid scheme
+CONCRETE	hieroglyph	
+CONCRETE	gladiator	
+AMBIGUOUS	knight	medieval warrior vs chess piece vs honorific title
+AMBIGUOUS	castle	fortified building vs chess piece
+CONCRETE	catapult	
+CONCRETE	crossbow	
+CONCRETE	samurai	
+CONCRETE	pharaoh	
+AMBIGUOUS	mummy	preserved body vs British slang for mother
+CONCRETE	sarcophagus	
+CONCRETE	colosseum	
+CONCRETE	parchment	
+AMBIGUOUS	scroll	ancient document vs to scroll (digital action)
+DENSE_CLUSTER	dynasty	Forms of/periods of power: monarchy, empire, republic, reign, lineage
+DENSE_CLUSTER	monarchy	Forms of government: democracy, oligarchy, republic, dictatorship, theocracy
+DENSE_CLUSTER	democracy	Forms of government: monarchy, oligarchy, republic, dictatorship, theocracy
+AMBIGUOUS	revolution	political uprising vs rotation/spinning vs scientific revolution (paradigm shift)
+AMBIGUOUS	constitution	legal founding document vs physical constitution (health/body)
+AMBIGUOUS	currency	money/medium of exchange vs currency (being current/relevance)
+AMBIGUOUS	artifact	historical object vs digital artifact (image compression) vs unintended byproduct
+CONCRETE	museum	
+CONCRETE	monument	
+CONCRETE	sculpture	
+CONCRETE	mosaic	
+AMBIGUOUS	tapestry	woven fabric artwork vs metaphorical tapestry of events/life
+CONCRETE	calligraphy	
+CONCRETE	origami	
+CONCRETE	kimono	
+CONCRETE	sombrero	
+CONCRETE	turban	
+CONCRETE	lighthouse	
+CONCRETE	windmill	
+CONCRETE	skyscraper	
+CONCRETE	cathedral	
+CONCRETE	mosque	
+CONCRETE	monastery	
+CONCRETE	palace	
+CONCRETE	fortress	
+CONCRETE	tunnel	
+AMBIGUOUS	harbor	coastal dock area vs to harbor (verb: to shelter/conceal feelings or fugitives)
+CONCRETE	stadium	
+CONCRETE	observatory	
+CONCRETE	greenhouse	
+CONCRETE	vineyard	
+CONCRETE	smartphone	
+CONCRETE	computer	
+CONCRETE	printer	
+CONCRETE	scanner	
+CONCRETE	router	
+CONCRETE	robot	
+AMBIGUOUS	drone	unmanned aircraft vs drone bee vs to drone on (monotonous speaking)
+AMBIGUOUS	battery	energy storage device vs legal term for assault vs battery of tests
+AMBIGUOUS	circuit	electrical circuit vs racing circuit vs judicial circuit vs a circuit (loop path)
+CONCRETE	sensor	
+CONCRETE	camera	
+CONCRETE	microscope	
+AMBIGUOUS	speaker	audio device vs a person who speaks vs Speaker of the House
+CONCRETE	television	
+CONCRETE	refrigerator	
+CONCRETE	microwave	
+CONCRETE	dishwasher	
+CONCRETE	elevator	
+CONCRETE	escalator	
+AMBIGUOUS	submarine	underwater vessel vs submarine sandwich
+CONCRETE	helicopter	
+CONCRETE	airplane	
+CONCRETE	rocket	
+CONCRETE	locomotive	
+CONCRETE	bicycle	
+CONCRETE	motorcycle	
+CONCRETE	parachute	
+AMBIGUOUS	satellite	orbital object vs satellite TV/dish vs satellite state (political)
+DENSE_CLUSTER	basketball	Ball sports: football, volleyball, tennis, soccer, baseball
+DENSE_CLUSTER	football	Ball sports: basketball, volleyball, soccer, rugby, baseball
+DENSE_CLUSTER	volleyball	Ball sports: basketball, football, tennis, soccer, baseball
+DENSE_CLUSTER	marathon	Athletic events: sprint, triathlon, hurdles, decathlon, relay
+DENSE_CLUSTER	gymnastics	Olympic sports: wrestling, boxing, fencing, archery, athletics
+DENSE_CLUSTER	wrestling	Combat sports: boxing, fencing, judo, karate, taekwondo
+DENSE_CLUSTER	boxing	Combat sports: wrestling, fencing, judo, karate, taekwondo
+DENSE_CLUSTER	fencing	Combat sports/Olympic events: boxing, wrestling, archery, judo, taekwondo
+DENSE_CLUSTER	archery	Olympic sports: fencing, javelin, wrestling, gymnastics, shooting
+DENSE_CLUSTER	javelin	Track and field events: hurdles, discus, shot put, hammer throw, pole vault
+DENSE_CLUSTER	hurdles	Track and field events: javelin, discus, sprint, relay, pole vault
+DENSE_CLUSTER	checkers	Board games: chess, dominoes, backgammon, draughts, Scrabble
+DENSE_CLUSTER	dominoes	Board/tile games: checkers, chess, mahjong, backgammon, Scrabble
+DENSE_CLUSTER	crossword	Word/puzzle games: jigsaw, sudoku, Scrabble, wordsearch, anagram
+AMBIGUOUS	jigsaw	puzzle toy vs jigsaw (power saw tool)
+AMBIGUOUS	marbles	children's game/toy vs to lose one's marbles (sanity)
+CONCRETE	frisbee	
+CONCRETE	trampoline	
+AMBIGUOUS	kite	flying toy vs kite (bird of prey) vs to kite a check (fraud)
+DENSE_CLUSTER	guitar	String instruments: violin, banjo, ukulele, cello, mandolin
+DENSE_CLUSTER	violin	String instruments: guitar, cello, viola, banjo, ukulele
+DENSE_CLUSTER	trumpet	Brass instruments: trombone, saxophone, tuba, French horn, cornet
+DENSE_CLUSTER	saxophone	Wind instruments: trumpet, clarinet, trombone, flute, oboe
+DENSE_CLUSTER	clarinet	Wind instruments: saxophone, flute, oboe, bassoon, trumpet
+DENSE_CLUSTER	trombone	Brass instruments: trumpet, tuba, French horn, saxhorn, cornet
+DENSE_CLUSTER	harmonica	Small wind instruments: accordion, kazoo, recorder, melodica, ocarina
+DENSE_CLUSTER	accordion	Reed instruments: harmonica, concertina, melodica, bagpipe, bandoneon
+DENSE_CLUSTER	xylophone	Percussion instruments: marimba, vibraphone, glockenspiel, cymbal, tambourine
+DENSE_CLUSTER	cymbal	Percussion instruments: drum, xylophone, tambourine, gong, triangle
+DENSE_CLUSTER	tambourine	Percussion instruments: cymbal, drum, xylophone, maracas, triangle
+DENSE_CLUSTER	bagpipe	Folk wind instruments: accordion, harmonica, duduk, hurdy-gurdy, uilleann pipes
+DENSE_CLUSTER	ukulele	String instruments: guitar, banjo, mandolin, violin, sitar
+DENSE_CLUSTER	banjo	String instruments: guitar, ukulele, mandolin, fiddle, dulcimer
+DENSE_CLUSTER	cello	String instruments: violin, viola, double bass, guitar, harp
+DENSE_CLUSTER	opera	Performing arts genres: ballet, musical, symphony, theater, cabaret
+DENSE_CLUSTER	ballet	Dance/performing arts genres: opera, jazz dance, contemporary, flamenco, ballroom
+AMBIGUOUS	painting	artwork/finished piece vs the act of painting vs house painting
+CONCRETE	mural	
+CONCRETE	graffiti	
+CONCRETE	portrait	
+AMBIGUOUS	canvas	painting surface vs canvas tent fabric vs to canvas (verb: to solicit)
+AMBIGUOUS	palette	artist's color palette vs palate (taste) vs pallet (shipping platform)
+CONCRETE	easel	
+ABSTRACT_WITH_ANTONYM	freedom	oppression/imprisonment
+ABSTRACT_SAFE	friendship	No single dominant antonym; enmity is not as strongly paired as freedom/oppression
+ABSTRACT_SAFE	curiosity	No single dominant antonym; indifference is weak counterpart
+ABSTRACT_WITH_ANTONYM	patience	impatience
+ABSTRACT_WITH_ANTONYM	courage	cowardice
+ABSTRACT_SAFE	jealousy	No single dominant antonym; contentment is not strongly paired
+ABSTRACT_SAFE	nostalgia	No single dominant antonym; no clear opposite dominates embedding space
+ABSTRACT_WITH_ANTONYM	silence	noise/sound
+AMBIGUOUS	echo	acoustic phenomenon vs Echo (Amazon device) vs to echo (verb: to repeat/reflect)
+ABSTRACT_SAFE	rhythm	No single dominant antonym; arrhythmia is technical not culturally dominant
+ABSTRACT_WITH_ANTONYM	harmony	discord/dissonance
+DENSE_CLUSTER	melody	Musical elements: harmony, rhythm, symphony, chord, tempo
+DENSE_CLUSTER	symphony	Musical compositions/forms: concerto, sonata, opera, overture, suite
+CONCRETE	orchestra	
+ABSTRACT_WITH_ANTONYM	gratitude	ingratitude
+ABSTRACT_WITH_ANTONYM	loyalty	betrayal/disloyalty
+ABSTRACT_WITH_ANTONYM	honesty	dishonesty/deception
+ABSTRACT_SAFE	ambition	No single dominant antonym; complacency is weak and not culturally fixed as opposite
+ABSTRACT_WITH_ANTONYM	wisdom	foolishness/ignorance
+ABSTRACT_WITH_ANTONYM	justice	injustice
