@@ -1,0 +1,361 @@
+# Phase 1.5 task 3: target curation review (claude-sonnet-4-6).
+# Format: LABEL<TAB>word<TAB>note
+# This file is informational only. targets.txt and target_order.txt
+# are NOT modified by this script. Do the final cut manually.
+CONCRETE	umbrella	
+CONCRETE	scissors	
+CONCRETE	backpack	
+CONCRETE	mirror	
+CONCRETE	candle	
+CONCRETE	blanket	
+CONCRETE	wallet	
+CONCRETE	calendar	
+CONCRETE	telescope	
+CONCRETE	compass	
+AMBIGUOUS	anchor	physical anchor vs. metaphorical anchor (stability) vs. news anchor
+CONCRETE	ladder	
+CONCRETE	hammer	
+CONCRETE	wrench	
+AMBIGUOUS	screwdriver	tool vs. cocktail drink
+CONCRETE	mattress	
+CONCRETE	pillow	
+CONCRETE	doorbell	
+AMBIGUOUS	keyboard	computer keyboard vs. musical keyboard instrument
+CONCRETE	headphones	
+CONCRETE	suitcase	
+CONCRETE	thermostat	
+CONCRETE	flashlight	
+CONCRETE	toothbrush	
+CONCRETE	stapler	
+CONCRETE	envelope	
+CONCRETE	paperclip	
+CONCRETE	wheelbarrow	
+CONCRETE	chandelier	
+CONCRETE	hourglass	
+CONCRETE	kaleidoscope	
+CONCRETE	thermometer	
+CONCRETE	magnet	
+CONCRETE	padlock	
+CONCRETE	zipper	
+CONCRETE	shoelace	
+CONCRETE	teapot	
+CONCRETE	whistle	
+CONCRETE	lantern	
+CONCRETE	bucket	
+CONCRETE	broom	
+CONCRETE	mop	
+AMBIGUOUS	sponge	cleaning sponge vs. sea animal sponge vs. sponge (to absorb/cadge)
+CONCRETE	clothespin	
+CONCRETE	corkscrew	
+CONCRETE	tweezers	
+CONCRETE	binoculars	
+CONCRETE	stopwatch	
+CONCRETE	tripod	
+CONCRETE	volcano	
+CONCRETE	glacier	
+CONCRETE	waterfall	
+CONCRETE	rainbow	
+CONCRETE	tornado	
+CONCRETE	hurricane	
+CONCRETE	avalanche	
+CONCRETE	earthquake	
+CONCRETE	tsunami	
+CONCRETE	desert	
+CONCRETE	jungle	
+CONCRETE	canyon	
+CONCRETE	meadow	
+CONCRETE	marsh	
+AMBIGUOUS	oasis	physical oasis vs. metaphorical refuge/relief
+CONCRETE	tundra	
+AMBIGUOUS	iceberg	literal iceberg vs. common metaphor for hidden bulk
+CONCRETE	mountain	
+CONCRETE	valley	
+CONCRETE	island	
+CONCRETE	peninsula	
+CONCRETE	archipelago	
+CONCRETE	lagoon	
+AMBIGUOUS	delta	river delta vs. Greek letter vs. airline vs. mathematical symbol
+AMBIGUOUS	plateau	geographic plateau vs. leveling-off plateau (progress)
+CONCRETE	cliff	
+CONCRETE	cave	
+CONCRETE	geyser	
+CONCRETE	blizzard	
+CONCRETE	drought	
+CONCRETE	monsoon	
+AMBIGUOUS	fog	literal weather fog vs. mental fog/confusion
+CONCRETE	frost	
+CONCRETE	dew	
+CONCRETE	thunder	
+CONCRETE	lightning	
+CONCRETE	sunset	
+CONCRETE	sunrise	
+CONCRETE	eclipse	
+CONCRETE	constellation	
+AMBIGUOUS	horizon	literal skyline horizon vs. metaphorical horizon (future/limits)
+AMBIGUOUS	current	water/electrical current vs. current (adjective meaning present/now)
+AMBIGUOUS	tide	ocean tide vs. metaphorical tide (turn of events) vs. detergent brand
+CONCRETE	whirlpool	
+CONCRETE	stalactite	
+CONCRETE	dolphin	
+CONCRETE	octopus	
+CONCRETE	penguin	
+CONCRETE	kangaroo	
+CONCRETE	giraffe	
+CONCRETE	elephant	
+CONCRETE	rhinoceros	
+CONCRETE	hedgehog	
+CONCRETE	platypus	
+AMBIGUOUS	chameleon	literal lizard vs. metaphor for someone who changes personality/appearance
+CONCRETE	jellyfish	
+AMBIGUOUS	butterfly	insect vs. butterfly stroke vs. butterflies (nervous feeling)
+CONCRETE	dragonfly	
+CONCRETE	firefly	
+CONCRETE	honeybee	
+CONCRETE	spider	
+CONCRETE	scorpion	
+CONCRETE	seahorse	
+CONCRETE	starfish	
+CONCRETE	crocodile	
+CONCRETE	alligator	
+CONCRETE	flamingo	
+CONCRETE	peacock	
+CONCRETE	ostrich	
+CONCRETE	armadillo	
+CONCRETE	porcupine	
+CONCRETE	raccoon	
+CONCRETE	otter	
+CONCRETE	beaver	
+CONCRETE	squirrel	
+CONCRETE	hummingbird	
+CONCRETE	woodpecker	
+CONCRETE	falcon	
+AMBIGUOUS	vulture	literal bird vs. metaphor for predatory/opportunistic person
+CONCRETE	walrus	
+CONCRETE	narwhal	
+CONCRETE	koala	
+AMBIGUOUS	sloth	animal vs. deadly sin (laziness)
+CONCRETE	lemur	
+CONCRETE	gazelle	
+CONCRETE	antelope	
+CONCRETE	buffalo	
+CONCRETE	camel	
+CONCRETE	llama	
+CONCRETE	tortoise	
+CONCRETE	cactus	
+CONCRETE	bamboo	
+CONCRETE	sunflower	
+CONCRETE	mushroom	
+CONCRETE	seaweed	
+CONCRETE	fern	
+CONCRETE	orchid	
+CONCRETE	tulip	
+CONCRETE	dandelion	
+CONCRETE	clover	
+CONCRETE	acorn	
+CONCRETE	pinecone	
+CONCRETE	pizza	
+CONCRETE	sushi	
+CONCRETE	pasta	
+CONCRETE	sandwich	
+CONCRETE	pancake	
+AMBIGUOUS	waffle	food vs. to waffle (speak indecisively)
+CONCRETE	croissant	
+CONCRETE	baguette	
+CONCRETE	pretzel	
+CONCRETE	popcorn	
+CONCRETE	marshmallow	
+CONCRETE	caramel	
+CONCRETE	chocolate	
+AMBIGUOUS	vanilla	flavor vs. plain/boring (slang)
+CONCRETE	cinnamon	
+CONCRETE	nutmeg	
+CONCRETE	avocado	
+CONCRETE	pineapple	
+CONCRETE	watermelon	
+CONCRETE	strawberry	
+CONCRETE	blueberry	
+CONCRETE	coconut	
+CONCRETE	almond	
+CONCRETE	walnut	
+CONCRETE	peanut	
+AMBIGUOUS	honey	food substance vs. term of endearment
+CONCRETE	yogurt	
+CONCRETE	omelette	
+CONCRETE	spaghetti	
+CONCRETE	lasagna	
+CONCRETE	dumpling	
+AMBIGUOUS	noodle	food noodle vs. head/brain (slang) vs. to noodle (improvise)
+AMBIGUOUS	gravity	physical force vs. seriousness/gravitas
+CONCRETE	galaxy	
+CONCRETE	asteroid	
+CONCRETE	comet	
+CONCRETE	meteor	
+AMBIGUOUS	orbit	astronomical path vs. sphere of influence/activity
+CONCRETE	nebula	
+CONCRETE	supernova	
+CONCRETE	molecule	
+CONCRETE	electron	
+CONCRETE	photon	
+AMBIGUOUS	magnetism	physical force vs. personal charm/charisma
+CONCRETE	electricity	
+CONCRETE	radiation	
+AMBIGUOUS	evolution	biological evolution vs. general development/change over time
+CONCRETE	bacteria	
+AMBIGUOUS	virus	biological pathogen vs. computer virus
+CONCRETE	vaccine	
+CONCRETE	chromosome	
+CONCRETE	ecosystem	
+CONCRETE	enzyme	
+CONCRETE	hormone	
+CONCRETE	neuron	
+CONCRETE	skeleton	
+CONCRETE	skull	
+CONCRETE	muscle	
+CONCRETE	tendon	
+CONCRETE	cartilage	
+CONCRETE	kidney	
+CONCRETE	pancreas	
+CONCRETE	esophagus	
+CONCRETE	retina	
+CONCRETE	cornea	
+CONCRETE	eardrum	
+AMBIGUOUS	appendix	body organ vs. book appendix (supplementary section)
+CONCRETE	vertebra	
+CONCRETE	pyramid	
+CONCRETE	hieroglyph	
+CONCRETE	gladiator	
+AMBIGUOUS	knight	medieval warrior vs. chess piece vs. honorific title
+AMBIGUOUS	castle	fortress building vs. chess piece
+CONCRETE	catapult	
+CONCRETE	crossbow	
+CONCRETE	samurai	
+CONCRETE	pharaoh	
+AMBIGUOUS	mummy	ancient preserved corpse vs. British term for mother
+CONCRETE	sarcophagus	
+CONCRETE	colosseum	
+CONCRETE	aqueduct	
+CONCRETE	parchment	
+AMBIGUOUS	scroll	physical rolled document vs. to scroll (digital action)
+ABSTRACT_SAFE	dynasty	refers to a ruling lineage/era; no single dominant antonym competes strongly
+ABSTRACT_WITH_ANTONYM	monarchy	antonym: democracy/republic
+ABSTRACT_WITH_ANTONYM	democracy	antonym: autocracy/dictatorship
+AMBIGUOUS	revolution	political upheaval vs. rotation (one revolution of a wheel) vs. scientific revolution
+AMBIGUOUS	constitution	legal document vs. bodily constitution (health/build)
+AMBIGUOUS	currency	money/medium of exchange vs. currentness/relevance
+CONCRETE	artifact	
+CONCRETE	museum	
+CONCRETE	monument	
+CONCRETE	sculpture	
+CONCRETE	mosaic	
+CONCRETE	fresco	
+AMBIGUOUS	tapestry	physical woven fabric vs. metaphorical tapestry (complex whole)
+CONCRETE	calligraphy	
+CONCRETE	origami	
+CONCRETE	kimono	
+CONCRETE	sombrero	
+CONCRETE	turban	
+CONCRETE	lighthouse	
+CONCRETE	windmill	
+CONCRETE	skyscraper	
+CONCRETE	cathedral	
+CONCRETE	mosque	
+CONCRETE	monastery	
+CONCRETE	palace	
+CONCRETE	fortress	
+CONCRETE	tunnel	
+AMBIGUOUS	harbor	physical port vs. to harbor (shelter/conceal feelings or fugitives)
+CONCRETE	stadium	
+CONCRETE	observatory	
+CONCRETE	greenhouse	
+CONCRETE	vineyard	
+CONCRETE	smartphone	
+CONCRETE	computer	
+CONCRETE	printer	
+CONCRETE	scanner	
+CONCRETE	router	
+CONCRETE	robot	
+AMBIGUOUS	drone	unmanned aircraft vs. male bee vs. to drone on (speak monotonously)
+AMBIGUOUS	battery	energy storage device vs. legal battery (assault) vs. artillery battery
+AMBIGUOUS	circuit	electrical circuit vs. racing circuit vs. judicial circuit
+CONCRETE	sensor	
+CONCRETE	camera	
+CONCRETE	microscope	
+AMBIGUOUS	speaker	audio device vs. person who speaks vs. Speaker of a legislature
+CONCRETE	television	
+CONCRETE	refrigerator	
+CONCRETE	microwave	
+CONCRETE	dishwasher	
+CONCRETE	elevator	
+CONCRETE	escalator	
+AMBIGUOUS	submarine	underwater vessel vs. submarine sandwich
+CONCRETE	helicopter	
+CONCRETE	airplane	
+CONCRETE	rocket	
+CONCRETE	locomotive	
+CONCRETE	bicycle	
+CONCRETE	motorcycle	
+CONCRETE	parachute	
+AMBIGUOUS	satellite	orbiting spacecraft vs. satellite state/city (dependent entity)
+AMBIGUOUS	basketball	sport vs. physical ball
+AMBIGUOUS	football	sport vs. physical ball vs. American football vs. soccer
+AMBIGUOUS	volleyball	sport vs. physical ball
+AMBIGUOUS	marathon	running race vs. extended event (movie marathon)
+CONCRETE	gymnastics	
+CONCRETE	wrestling	
+AMBIGUOUS	boxing	sport vs. putting things in boxes
+AMBIGUOUS	fencing	sport vs. fence-building vs. handling stolen goods
+CONCRETE	archery	
+CONCRETE	javelin	
+AMBIGUOUS	hurdles	athletic event vs. obstacles/challenges to overcome
+CONCRETE	checkers	
+CONCRETE	dominoes	
+CONCRETE	crossword	
+AMBIGUOUS	jigsaw	jigsaw puzzle vs. jigsaw (power saw)
+AMBIGUOUS	marbles	glass ball toys vs. to lose one's marbles (sanity)
+CONCRETE	frisbee	
+CONCRETE	trampoline	
+CONCRETE	kite	
+CONCRETE	guitar	
+CONCRETE	violin	
+CONCRETE	trumpet	
+CONCRETE	saxophone	
+CONCRETE	clarinet	
+CONCRETE	trombone	
+CONCRETE	harmonica	
+CONCRETE	accordion	
+CONCRETE	xylophone	
+CONCRETE	cymbal	
+CONCRETE	tambourine	
+CONCRETE	bagpipe	
+CONCRETE	ukulele	
+CONCRETE	banjo	
+CONCRETE	cello	
+CONCRETE	opera	
+CONCRETE	ballet	
+AMBIGUOUS	painting	artwork object vs. the activity of painting
+CONCRETE	mural	
+CONCRETE	graffiti	
+CONCRETE	portrait	
+AMBIGUOUS	canvas	physical painting surface vs. to canvas (solicit opinions)
+AMBIGUOUS	palette	artist's color board vs. palate (taste) vs. pallet (shipping platform)
+CONCRETE	easel	
+ABSTRACT_WITH_ANTONYM	freedom	antonym: oppression/captivity
+ABSTRACT_WITH_ANTONYM	friendship	antonym: enmity/hostility
+ABSTRACT_SAFE	curiosity	no single dominant antonym; indifference is weak competitor
+ABSTRACT_WITH_ANTONYM	patience	antonym: impatience
+ABSTRACT_WITH_ANTONYM	courage	antonym: cowardice
+ABSTRACT_SAFE	jealousy	no single dominant antonym dominates; contentment is a loose opposite but not a strong semantic neighbor
+ABSTRACT_SAFE	nostalgia	no clear dominant antonym; anticipation is loosely opposite but not a strong semantic competitor
+ABSTRACT_WITH_ANTONYM	silence	antonym: noise/sound
+AMBIGUOUS	echo	acoustic phenomenon vs. to echo (repeat/mirror someone's words) vs. Amazon Echo
+ABSTRACT_SAFE	rhythm	no dominant antonym; arrhythmia is technical, not a close semantic neighbor
+ABSTRACT_WITH_ANTONYM	harmony	antonym: discord/conflict
+CONCRETE	melody	
+CONCRETE	symphony	
+CONCRETE	orchestra	
+ABSTRACT_WITH_ANTONYM	gratitude	antonym: ingratitude/resentment
+ABSTRACT_WITH_ANTONYM	loyalty	antonym: betrayal/disloyalty
+ABSTRACT_WITH_ANTONYM	honesty	antonym: dishonesty/deception
+ABSTRACT_SAFE	ambition	no single dominant antonym; laziness/complacency are weak competitors
+ABSTRACT_WITH_ANTONYM	wisdom	antonym: foolishness/ignorance
+ABSTRACT_WITH_ANTONYM	justice	antonym: injustice
