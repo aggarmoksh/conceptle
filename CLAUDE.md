@@ -101,7 +101,7 @@ Casual anti-spoiler only. Do not overengineer. Determined users can always read 
 ## Content pipeline principles
 
 - **Generate at build time, never at solve time.** The client must never call an LLM or embedding API.
-- **Vocabulary size:** target 15,000 to 25,000 common English words for MVP. Filter out proper nouns, plurals of nouns already in list, obscure archaic words.
+- **Vocabulary size:** target 12,000 to 25,000 common English words for MVP. Filter out proper nouns, plurals of nouns already in list, obscure archaic words. (Floor lowered from 15,000 to 12,000 in Phase 1.5: lemmatization and a proper-noun POS filter both shrink the deduped vocabulary, and the resulting size was accepted as-is rather than backfilled by widening the raw word pool.)
 - **Target words:** curated list of 300 to 500 concrete, well-known nouns/concepts (e.g., ocean, guitar, hospital, freedom, planet). Avoid obscure words, avoid words with double meanings that will frustrate players.
 - **Rerun cadence:** pipeline generates puzzles for the next 90 days at a time. User reruns manually every ~60 days.
 
@@ -145,3 +145,31 @@ Work in the phases below. **Do not proceed past a phase boundary without telling
 - **Vercel free tier trap:** Do NOT deploy to Vercel. Its Hobby plan prohibits commercial use. Cloudflare Pages only.
 - **Embeddings on git:** `embeddings.npy` can be 30 to 100 MB. Never commit. Add to `.gitignore` in Phase 1.
 - **Client bundle bloat:** Do not ship the full embedding matrix to the browser. Only per-day rank JSON.
+
+## Quality bar (enforce in every PR)
+
+- Every public function has a type signature and a one-line docstring or JSDoc
+- Every new feature has at least one unit test on its core logic
+- Zero third-party scripts on the game page
+- Bundle budget: <100KB gzipped JS, <200KB per-day puzzle JSON gzipped
+- Time to first guess under 2s on simulated 4G, cold cache
+- WCAG AA contrast, keyboard-fully-playable, screen-reader-announced ranks
+- No color-only signals (numbers always accompany color)
+- prefers-reduced-motion respected
+- Determinism tested: puzzle generation reruns produce byte-identical output
+- Error boundary + graceful degradation for JSON load failure, localStorage
+  disabled, JS disabled
+
+## Anti-features (do not add without explicit user approval)
+
+- Accounts, login, cross-device sync
+- Hints, unlimited/practice mode, archive, hard mode
+- Dark mode toggle (ship one theme)
+- Tutorial modal on load
+- Animations beyond essential feedback
+- Sound
+- Any third-party analytics that requires a cookie banner
+- Any marketing copy on the game page
+- Emoji in headings or buttons
+- Gradient backgrounds
+- "Made with", "Powered by", or developer credit on game page (put in /about only if at all)

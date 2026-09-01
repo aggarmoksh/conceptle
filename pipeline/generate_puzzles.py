@@ -12,19 +12,21 @@ Determinism rules (see CLAUDE.md):
   - Each day's target is guaranteed rank 1: it is folded into that day's ranking set
     (added if not already one of the vocabulary words) with similarity 1.0
     against itself.
-  - Lexical-contamination filter (advisor review fix #2): a target like "battery" was
-    surfacing "bat" and "batter" near the top purely because they share letters with
-    it, not because they mean anything alike. After ranking, any vocab word W (other
-    than the target itself) is dropped from that day's ranks if:
-      (a) W and the target share a prefix of 4+ characters, OR
-      (b) the target is a substring of W and len(target) > 3, OR
-      (c) W is a substring of the target and len(W) > 3
-    Ranks are then renumbered contiguously (1..M) over the surviving words so "lower
-    rank = closer" still holds with no gaps. vocab_size reflects the post-filter count.
-    NOTE: applied exactly as specified. It does not catch every short overlap (e.g.
-    "bat" vs "battery" shares only a 3-char prefix and neither is a >3-char substring
-    of the other, so this literal rule leaves it in). Flagged in the Phase 1 report
-    rather than silently widened.
+  - Lexical-contamination filter (advisor review fix #2, extended in Phase 1.5): a
+    target like "battery" was surfacing "bat" and "batter" near the top purely because
+    they share letters with it, not because they mean anything alike. After ranking,
+    any vocab word W (other than the target itself) is dropped from that day's ranks
+    if any of:
+      (a) W and the target share a prefix of 4+ characters
+      (b) the target is a substring of W and len(target) > 3
+      (c) W is a substring of the target and len(W) >= 3
+    (c) is the Phase 1.5 extension: originally len(W) > 3, which missed "bat" (length
+    3) against "battery" since "bat" is a substring of "battery" but only 3 characters
+    long. Phase 1.5 also asked for a standalone "W is a prefix of target, len(W) >= 3"
+    rule; a prefix is always a substring, so that case is already covered by (c) and
+    was not implemented as a separate check. Ranks are then renumbered contiguously
+    (1..M) over the surviving words so "lower rank = closer" still holds with no gaps.
+    vocab_size reflects the post-filter count.
 
 Output per day (web/public/puzzles/dayN.json):
   {
@@ -79,7 +81,7 @@ def is_lexically_contaminated(word: str, target: str) -> bool:
         return True
     if len(target) > 3 and target in word:
         return True
-    if len(word) > 3 and word in target:
+    if len(word) >= 3 and word in target:
         return True
     return False
 

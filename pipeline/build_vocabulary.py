@@ -35,6 +35,7 @@ Run: .venv/Scripts/python.exe pipeline/build_vocabulary.py
 
 from __future__ import annotations
 
+import random
 import re
 
 import spacy
@@ -43,6 +44,7 @@ from wordfreq import top_n_list
 TARGET_SIZE = 20000
 RAW_POOL_SIZE = 32000
 OUTPUT_PATH = "pipeline/data/vocabulary.txt"
+REPORT_SEED = 2026  # for the reproducible PROPN spot-check sample, not gameplay
 
 ALPHA_RE = re.compile(r"^[a-z]+$")
 
@@ -112,17 +114,34 @@ def build_pre_lemma_vocabulary() -> list[str]:
     return candidates
 
 
-def lemmatize_and_dedupe(words: list[str]) -> list[str]:
-    """Lemmatize each word and collapse inflectional variants to one entry each.
+def lemmatize_dedupe_and_filter_propn(
+    words: list[str],
+) -> tuple[list[str], list[str]]:
+    """Lemmatize, drop proper nouns, and collapse inflectional variants to one entry each.
+
+    Proper-noun filter (Phase 1.5 task 2): each word is POS-tagged by spaCy in
+    isolation (no sentence context) and dropped if tagged PROPN. This is a second,
+    independent pass over the same manual BLOCKLIST approach in
+    build_pre_lemma_vocabulary() above: the block-list only catches proper nouns
+    someone thought to list by hand, while this catches whatever spaCy's tagger
+    recognizes as a name-like token, at the cost of the tagger's own error rate on
+    single-word (no-context) input, which is the known imperfection to spot-check
+    the returned sample against, per the module docstring's caveat about "geese".
 
     Order is preserved by first (highest-frequency) occurrence of each lemma.
+    Returns (final_vocabulary, words_dropped_for_being_tagged_propn).
     """
     nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
 
     final: list[str] = []
     seen_lemmas: set[str] = set()
+    removed_propn: list[str] = []
     for doc in nlp.pipe(words, batch_size=512):
-        lemma = doc[0].lemma_.lower()
+        token = doc[0]
+        if token.pos_ == "PROPN":
+            removed_propn.append(token.text)
+            continue
+        lemma = token.lemma_.lower()
         if not ALPHA_RE.match(lemma):
             continue
         if len(lemma) < 3:
@@ -134,7 +153,7 @@ def lemmatize_and_dedupe(words: list[str]) -> list[str]:
         seen_lemmas.add(lemma)
         final.append(lemma)
 
-    return final
+    return final, removed_propn
 
 
 def main() -> None:
@@ -142,9 +161,15 @@ def main() -> None:
     pre_lemma = build_pre_lemma_vocabulary()
     print(f"Vocab size before lemmatization: {len(pre_lemma)}")
 
-    print("Lemmatizing with spaCy (en_core_web_sm) and deduping...")
-    vocabulary = lemmatize_and_dedupe(pre_lemma)
-    print(f"Vocab size after lemmatization:  {len(vocabulary)}")
+    print("Lemmatizing with spaCy (en_core_web_sm), dropping PROPN, and deduping...")
+    vocabulary, removed_propn = lemmatize_dedupe_and_filter_propn(pre_lemma)
+    print(f"Vocab size after lemmatization + PROPN filter: {len(vocabulary)}")
+    print(f"Words dropped for being tagged PROPN: {len(removed_propn)}")
+
+    sample_size = min(20, len(removed_propn))
+    sample = random.Random(REPORT_SEED).sample(removed_propn, sample_size)
+    print(f"Random sample of {sample_size} PROPN-dropped words (spot-check these):")
+    print(" ", sample)
 
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
         for word in vocabulary:
