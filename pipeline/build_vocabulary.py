@@ -14,10 +14,21 @@ Filtering applied, in order:
      wordfreq's corpus surfaces as "common" despite being names, not common nouns.
      [Likely] incomplete: wordfreq has no part-of-speech or named-entity tagging, so this
      is a manual, non-exhaustive pass. The Phase 1 sanity check is the backstop.
-  5. Drop obvious plurals of a noun already kept (simple heuristic: strip a trailing "s"
-     or "es" and check if the singular form is already in the set). [Likely] imperfect
-     for irregular plurals, acceptable for MVP per CLAUDE.md's "casual" filtering bar.
-  6. Truncate to the final target size.
+  5. Truncate to TARGET_SIZE (this is the pre-lemmatization vocabulary size).
+  6. Lemmatize every surviving word with spaCy's POS-aware lemmatizer (en_core_web_sm,
+     tagger + attribute_ruler + lemmatizer only, parser/NER disabled for speed) and
+     dedupe by lemma, keeping the earliest (highest-frequency) surface form's position
+     to decide final ordering. This is what collapses inflectional variants like
+     charge/charging/charged into a single vocabulary entry "charge", fixing the
+     morphological-clumping issue flagged in advisor review: without it, a target like
+     "battery" ranked its own inflections (charging, charged, ...) as separate top-20
+     entries purely because they share most of their embedding, not because they're
+     meaningfully distinct guesses.
+     [Likely] imperfect: spaCy's tagger runs on each word in isolation (no sentence
+     context), so a handful of words get an unreliable POS guess and fail to merge with
+     their base form (e.g. "geese" was misread as a proper noun and stayed unlemmatized
+     instead of merging into "goose" in spot checks). Rare, and caught by review/reruns,
+     not solved by a bigger model for this MVP.
 
 Run: .venv/Scripts/python.exe pipeline/build_vocabulary.py
 """
@@ -26,6 +37,7 @@ from __future__ import annotations
 
 import re
 
+import spacy
 from wordfreq import top_n_list
 
 TARGET_SIZE = 20000
@@ -54,7 +66,7 @@ BLOCKLIST = {
     "london", "paris", "york", "angeles", "chicago", "boston", "vegas", "tokyo",
     "beijing", "moscow", "berlin", "madrid", "rome", "dublin", "sydney", "toronto",
     "seattle", "miami", "dallas", "houston", "atlanta", "denver", "detroit",
-    "phoenix", "portland", "austin", "philadelphia", "vancouver",
+    "phoenix", "portland", "austin", "philadelphia", "vancouver", "prague",
     # big tech / brand names common in corpora
     "google", "facebook", "twitter", "amazon", "microsoft", "apple", "youtube",
     "instagram", "netflix", "spotify", "yahoo", "reddit", "wikipedia", "snapchat",
@@ -64,7 +76,7 @@ BLOCKLIST = {
     "john", "james", "robert", "michael", "william", "david", "richard", "joseph",
     "thomas", "charles", "mary", "patricia", "jennifer", "linda", "elizabeth",
     "susan", "jessica", "sarah", "karen", "smith", "johnson", "williams", "jones",
-    "brown", "davis", "miller", "wilson", "moore", "taylor", "anderson", "thomas",
+    "brown", "davis", "miller", "wilson", "moore", "taylor", "anderson",
     "jackson", "martin", "lee", "harris", "clark", "lewis", "walker", "hall",
     "allen", "young", "king", "wright", "scott", "green", "baker", "carter",
     "mitchell", "roberts", "phillips", "campbell", "parker", "evans", "edwards",
@@ -73,28 +85,15 @@ BLOCKLIST = {
     "bennett", "wood", "barnes", "ross", "henderson", "coleman", "jenkins", "perry",
     "powell", "long", "patterson", "hughes", "flores", "washington", "butler",
     "simmons", "foster", "gonzales", "bryant", "alexander", "russell", "griffin",
-    "diaz", "hayes",
+    "diaz", "hayes", "rothschild", "schwarzenegger", "rhodesia",
 }
 
 
-def strip_plural(word: str) -> str | None:
-    """Return the likely singular form of `word` if it looks like a simple plural."""
-    if word.endswith("ies") and len(word) > 4:
-        return word[:-3] + "y"
-    if word.endswith("es") and len(word) > 3:
-        return word[:-2]
-    if word.endswith("s") and not word.endswith("ss") and len(word) > 3:
-        return word[:-1]
-    return None
-
-
-def build_vocabulary() -> list[str]:
+def build_pre_lemma_vocabulary() -> list[str]:
+    """Frequency-ranked, filtered, alphabetic vocabulary before lemmatization."""
     raw = top_n_list("en", RAW_POOL_SIZE)
 
-    kept: list[str] = []
     seen: set[str] = set()
-
-    # Pass 1: alphabetic, length, blocklist filters, de-dup.
     candidates: list[str] = []
     for word in raw:
         if word in seen:
@@ -107,29 +106,45 @@ def build_vocabulary() -> list[str]:
             continue
         seen.add(word)
         candidates.append(word)
-
-    # Pass 2: drop plurals of a noun already present, preserving frequency order
-    # (earlier == more frequent, so we keep whichever form wordfreq ranks first).
-    candidate_set = set(candidates)
-    dropped: set[str] = set()
-    for word in candidates:
-        singular = strip_plural(word)
-        if singular and singular != word and singular in candidate_set and singular not in dropped:
-            dropped.add(word)
-
-    for word in candidates:
-        if word not in dropped:
-            kept.append(word)
-        if len(kept) >= TARGET_SIZE:
+        if len(candidates) >= TARGET_SIZE:
             break
 
-    return kept
+    return candidates
+
+
+def lemmatize_and_dedupe(words: list[str]) -> list[str]:
+    """Lemmatize each word and collapse inflectional variants to one entry each.
+
+    Order is preserved by first (highest-frequency) occurrence of each lemma.
+    """
+    nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
+
+    final: list[str] = []
+    seen_lemmas: set[str] = set()
+    for doc in nlp.pipe(words, batch_size=512):
+        lemma = doc[0].lemma_.lower()
+        if not ALPHA_RE.match(lemma):
+            continue
+        if len(lemma) < 3:
+            continue
+        if lemma in BLOCKLIST:
+            continue
+        if lemma in seen_lemmas:
+            continue
+        seen_lemmas.add(lemma)
+        final.append(lemma)
+
+    return final
 
 
 def main() -> None:
     print(f"Pulling top {RAW_POOL_SIZE} words from wordfreq...")
-    vocabulary = build_vocabulary()
-    print(f"Kept {len(vocabulary)} words after filtering (target was {TARGET_SIZE}).")
+    pre_lemma = build_pre_lemma_vocabulary()
+    print(f"Vocab size before lemmatization: {len(pre_lemma)}")
+
+    print("Lemmatizing with spaCy (en_core_web_sm) and deduping...")
+    vocabulary = lemmatize_and_dedupe(pre_lemma)
+    print(f"Vocab size after lemmatization:  {len(vocabulary)}")
 
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
         for word in vocabulary:
