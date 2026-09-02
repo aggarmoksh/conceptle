@@ -81,7 +81,6 @@ island
 peninsula
 archipelago
 lagoon
-delta
 plateau
 cliff
 cave
@@ -99,7 +98,6 @@ sunrise
 eclipse
 constellation
 horizon
-current
 tide
 whirlpool
 
@@ -213,7 +211,6 @@ electricity
 radiation
 evolution
 bacteria
-virus
 vaccine
 chromosome
 ecosystem
@@ -231,7 +228,6 @@ esophagus
 retina
 cornea
 eardrum
-appendix
 vertebra
 
 # --- History, culture, architecture ---
@@ -248,11 +244,6 @@ mummy
 sarcophagus
 colosseum
 parchment
-scroll
-dynasty
-monarchy
-democracy
-revolution
 constitution
 currency
 artifact
@@ -312,20 +303,6 @@ parachute
 satellite
 
 # --- Sports, games, toys ---
-basketball
-football
-volleyball
-marathon
-gymnastics
-wrestling
-boxing
-fencing
-archery
-javelin
-hurdles
-checkers
-dominoes
-crossword
 jigsaw
 marbles
 frisbee
@@ -333,23 +310,6 @@ trampoline
 kite
 
 # --- Music and art ---
-guitar
-violin
-trumpet
-saxophone
-clarinet
-trombone
-harmonica
-accordion
-xylophone
-cymbal
-tambourine
-bagpipe
-ukulele
-banjo
-cello
-opera
-ballet
 painting
 mural
 graffiti
@@ -359,23 +319,13 @@ palette
 easel
 
 # --- Abstract but concrete-explainable concepts ---
-freedom
 friendship
 curiosity
-patience
-courage
 jealousy
 nostalgia
-silence
 echo
 rhythm
-harmony
 melody
 symphony
 orchestra
-gratitude
-loyalty
-honesty
 ambition
-wisdom
-justice
