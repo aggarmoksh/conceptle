@@ -15,6 +15,7 @@ web/.next/
 web/out/
 web/.env*.local
 web/npm-debug.log*
+web/*.tsbuildinfo
 
 # OS / editor
 .DS_Store

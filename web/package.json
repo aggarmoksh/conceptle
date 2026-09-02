@@ -1,9 +1,37 @@
 {
   "name": "conceptle-web",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
-  "description": "Conceptle Next.js frontend. Not yet scaffolded, this is a Phase 2 placeholder.",
   "scripts": {
-    "dev": "echo \"Phase 2: next dev\" && exit 1"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "jest"
+  },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Safari versions",
+    "last 2 Firefox versions",
+    "last 2 Edge versions",
+    "not dead"
+  ],
+  "dependencies": {
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.7",
+    "@types/jest": "30.0.0",
+    "@types/node": "26.4.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "jest": "30.5.1",
+    "jest-environment-jsdom": "30.5.1",
+    "tailwindcss": "4.3.3",
+    "typescript": "7.0.2"
   }
 }
