@@ -1,4 +1,4 @@
-import { resolveDayNumber } from "./day";
+import { parseDayOverride, resolveDayNumber } from "./day";
 
 const EPOCH = "2026-09-15";
 
@@ -31,5 +31,32 @@ describe("resolveDayNumber", () => {
 
   test("respects a custom maxDay", () => {
     expect(resolveDayNumber(new Date(Date.UTC(2026, 8, 20)), EPOCH, 3)).toBe(3);
+  });
+});
+
+describe("parseDayOverride", () => {
+  test("reads a valid ?day=N override", () => {
+    expect(parseDayOverride("?day=15")).toBe(15);
+  });
+
+  test("returns null when the param is absent", () => {
+    expect(parseDayOverride("")).toBeNull();
+    expect(parseDayOverride("?foo=bar")).toBeNull();
+  });
+
+  test("returns null for out-of-range values", () => {
+    expect(parseDayOverride("?day=0")).toBeNull();
+    expect(parseDayOverride("?day=61")).toBeNull();
+    expect(parseDayOverride("?day=-5")).toBeNull();
+  });
+
+  test("returns null for non-integer values", () => {
+    expect(parseDayOverride("?day=abc")).toBeNull();
+    expect(parseDayOverride("?day=3.5")).toBeNull();
+  });
+
+  test("respects a custom maxDay", () => {
+    expect(parseDayOverride("?day=5", 3)).toBeNull();
+    expect(parseDayOverride("?day=3", 3)).toBe(3);
   });
 });

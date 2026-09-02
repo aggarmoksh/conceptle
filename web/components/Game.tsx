@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { resolveDayNumber } from "@/lib/day";
+import { parseDayOverride, resolveDayNumber } from "@/lib/day";
 import { normalizeGuess } from "@/lib/guess";
 import {
   bestRank,
@@ -35,7 +35,12 @@ export function Game() {
   // Resolved once per mount; a puzzle day never changes under a live tab, and
   // recomputing on every render would risk it drifting across a UTC midnight
   // mid-session, which the reducer/localStorage below aren't built to handle.
-  const day = useMemo(() => resolveDayNumber(new Date()), []);
+  // `?day=N` is a dev/testing convenience (see lib/day.ts), not a shipped
+  // feature; window is guarded since this render also runs during SSR.
+  const day = useMemo(() => {
+    const override = typeof window !== "undefined" ? parseDayOverride(window.location.search) : null;
+    return override ?? resolveDayNumber(new Date());
+  }, []);
 
   const [load, setLoad] = useState<LoadState>({ status: "loading" });
   const [game, setGame] = useState<GameState>(initialGameState());

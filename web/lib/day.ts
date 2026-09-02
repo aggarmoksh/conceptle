@@ -46,3 +46,21 @@ export function resolveDayNumber(
   const day = diffDays + 1; // day 1 = launch epoch
   return Math.min(Math.max(day, 1), maxDay);
 }
+
+/**
+ * Dev/testing convenience, added on request: reads an optional `?day=N`
+ * query-string override so a specific generated day can be previewed
+ * (e.g. `localhost:3000/?day=15`) without moving the system clock. Not a
+ * shipped feature: no UI links to it, it doesn't appear in the four Phase 2
+ * design decisions, and it never changes the persisted state key format
+ * (a day visited this way still saves to `conceptle:day:15:state` like any
+ * other day). Returns null when the param is absent or out of range, in
+ * which case the caller should fall back to resolveDayNumber.
+ */
+export function parseDayOverride(search: string, maxDay: number = 60): number | null {
+  const raw = new URLSearchParams(search).get("day");
+  if (raw === null) return null;
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > maxDay) return null;
+  return parsed;
+}
