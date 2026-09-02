@@ -20,3 +20,7 @@ crippling
 clipper
 ukip
 picasso
+# brand names that leaked near "refrigerator" (fast-food chains, not appliances)
+kfc
+mcdonald
+mcdonalds
