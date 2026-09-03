@@ -2,24 +2,20 @@
 # context; these are hand-picked to match player intent.
 #
 # Format: surface<TAB>lemma. These win over BOTH the wordfreq-derived and
-# grammar-generated forms.json entries (see pipeline/build_forms.py), even
-# when the surface form is itself a distinct, standalone vocabulary lemma
-# with an unrelated meaning: that is a deliberate, accepted tradeoff for the
-# entries below where the surface form itself has its own vocabulary entry
-# (rose, bore, wound, lay) -- typing that word will now always resolve to
-# the override target, and the word's own distinct sense becomes unreachable
-# by typing it directly for the rest of that day's puzzle. See the Phase
-# 1.5.1 follow-up report for which entries carry this tradeoff.
+# grammar-generated forms.json entries (see pipeline/build_forms.py). Neither
+# entry below shadows an existing standalone vocabulary lemma: "leaves" and
+# "axes" are not themselves vocabulary.txt entries, only their overridden
+# targets ("leaf", "axe") and the words they were wrongly resolving to
+# ("leave", "axis") are.
+#
+# Advisor review (Phase 1.5.1 finalization) removed six other overrides that
+# were in this file (saw->see, left->leave, rose->rise, bore->bear,
+# wound->wind, lay->lie): each of those surface forms IS also a standalone
+# vocabulary lemma with its own unrelated meaning (saw the tool, left the
+# direction, rose the flower, wound the injury, bore ..., lay the verb "to
+# lay"), so overriding them would have made that meaning permanently
+# unreachable by typing the word directly. Decision: accept the isolated-word
+# POS ambiguity for those six rather than shadow a standalone word. See the
+# lemma-shadowing safety rule in CLAUDE.md.
 leaves	leaf
-saw	see
-left	leave
-rose	rise
-bore	bear
-wound	wind
-lay	lie
-# Added independently (Phase 1.5.1 follow-up task 2's "any others you can
-# think of"): same structural ambiguity as leaves/leaf -- "axes" is not
-# itself a standalone vocabulary lemma, only "axe" and "axis" are, and a
-# player typing "axes" is far more likely to mean the plural of the tool
-# than the plural of the math term. Does not shadow an existing word.
 axes	axe

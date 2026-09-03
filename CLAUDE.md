@@ -104,6 +104,7 @@ Casual anti-spoiler only. Do not overengineer. Determined users can always read 
 - **Vocabulary size:** target 12,000 to 25,000 common English words for MVP. Filter out proper nouns, plurals of nouns already in list, obscure archaic words. (Floor lowered from 15,000 to 12,000 in Phase 1.5: lemmatization and a proper-noun POS filter both shrink the deduped vocabulary, and the resulting size was accepted as-is rather than backfilled by widening the raw word pool.)
 - **Target words:** curated list of 300 to 500 concrete, well-known nouns/concepts (e.g., ocean, guitar, hospital, freedom, planet). Avoid obscure words, avoid words with double meanings that will frustrate players.
 - **Rerun cadence:** pipeline generates puzzles for the next 90 days at a time. User reruns manually every ~60 days.
+- **Lemma-shadowing safety rule** (adopted in Phase 1.5.1): An automatic `forms.json` mapping must never override a surface form that is also a standalone lemma in `vocabulary.txt`. Manual overrides in `lemma_overrides.txt` may violate this rule intentionally, but each one requires advisor sign-off before shipping.
 
 ## Phase gates (STRICT)
 
