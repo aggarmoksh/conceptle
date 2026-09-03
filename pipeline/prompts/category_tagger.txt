@@ -1,0 +1,97 @@
+You are categorizing every word in a word-guessing game's vocabulary into
+exactly one of 27 fixed categories, for a game feature that shows the
+category of each guess as feedback to the player.
+
+Categories, with guidance on how to draw the lines between the ones that
+overlap in everyday usage:
+
+- animal: living creatures, wild or domestic, including insects, fish, birds.
+- plant: living flora: trees, flowers, fungi, vegetation.
+- food: edible items, prepared dishes, ingredients meant to be eaten.
+- drink: beverages, liquids meant to be drunk.
+- tool: a hand-operated implement used to perform a physical task (hammer,
+  wrench, screwdriver). Not powered household devices; see appliance.
+- appliance: a household electric or mechanical device (refrigerator,
+  toaster, washing machine). Not general computing/digital devices; see
+  technology.
+- vehicle: a mode of transportation (car, bicycle, airplane, boat).
+- clothing: garments and things worn on the body (shirt, shoe, hat, glove).
+- furniture: movable items that furnish a living or working space (chair,
+  table, shelf, bed).
+- building: a structure people occupy or use (house, hospital, castle,
+  warehouse).
+- place: a location, region, or site broader than a single building (city,
+  park, beach, country).
+- natural_feature: a naturally occurring landform or environmental feature
+  (mountain, river, volcano, canyon).
+- weather: atmospheric or meteorological phenomena (rain, storm, wind, fog).
+- body_part: a part of a human or animal body (hand, heart, tooth, wing).
+- cosmetic: a beauty or personal-care product applied to appearance
+  (mascara, lipstick, perfume).
+- technology: electronic, computing, or digital devices and concepts
+  (computer, robot, internet, camera). Prefer this over appliance for
+  anything primarily defined by computing/electronics rather than a
+  household chore.
+- container: an object whose primary purpose is to hold or store other
+  things (box, jar, bag, bucket).
+- material: a substance from which things are made (wood, metal, cotton,
+  glass).
+- instrument: a device for musical performance or precise measurement
+  (guitar, piano, thermometer, telescope, compass).
+- sport_equipment: gear used to play a specific sport or physical game
+  (ball, racket, skateboard, helmet).
+- document: a written, printed, or recorded informational item (book,
+  letter, map, contract, newspaper).
+- decoration: an object whose primary purpose is ornamental or aesthetic
+  display (painting, sculpture, wreath, tapestry).
+- person: proper nouns and human names (aaron, sarah), and human roles or
+  occupations (teacher, chef, priest, hunter). If a word names a kind of
+  person or refers to a specific person's name, it belongs here, even if
+  that person also does an action (a "teacher" teaches) or works with
+  objects (a "chef" uses tools) -- the word itself names the person, not
+  the action or object.
+- descriptor: an adjective or adverb that describes a quality, manner, or
+  degree of something else, rather than naming a standalone thing (abnormal,
+  loud, quickly, blue, reasonable). See the descriptor vs abstract_concept
+  guidance below.
+- action: a word that names an activity, process, or thing someone does,
+  rather than a physical object (running, cooking, thinking, laughing).
+- abstract_concept: an intangible idea, emotion, or concept with no
+  physical form, one that could stand alone as the answer to "what is
+  that called" (freedom, curiosity, love, democracy, justice).
+- other: use only when a word genuinely does not fit any category above.
+  This includes function words (articles, pronouns, prepositions,
+  conjunctions, auxiliary/modal verbs: "the", "and", "with", "your", "can",
+  "will"), pure degree/intensifier adverbs with no independent descriptive
+  content ("very", "really", "actually", "quite"), interjections ("oh",
+  "wow"), acronyms with no clear domain, and anything else with no sensible
+  category home. Do not stretch a function word into abstract_concept or
+  descriptor just to avoid "other": "other" is the correct, honest answer
+  for those.
+
+descriptor vs abstract_concept: this is the split most likely to cause
+confusion, so apply this test. descriptor is for a pure MODIFIER: a word
+that only makes sense attached to something else it describes ("a loud
+noise", "moved quickly", "an abnormal result") and cannot itself be the
+answer to "what is that" without begging the question of "what IS abnormal,
+loud, or quick." abstract_concept is for a word that NAMES a standalone
+idea, one a person could point to as a thing in its own right ("justice",
+"freedom", "patience" are things you can define, discuss, and want, not
+qualities you attach to a noun). If the word could naturally follow "the
+quality of being ___" or modify a noun directly, it is very likely
+descriptor; if it could naturally follow "the concept of ___" or be the
+subject of its own sentence ("Freedom matters."), it is abstract_concept.
+
+Rules:
+1. Every word gets EXACTLY ONE category.
+2. Many words have multiple possible readings (e.g. "bat" animal vs sports
+   equipment, "spring" season vs coil). Pick the single reading a general
+   audience would default to first, without overthinking edge cases.
+3. Use "other" freely for words that are genuinely uncategorizable under
+   this scheme (see the "other" guidance above) rather than forcing a bad
+   fit into one of the 26 substantive categories.
+4. Classify every single word given, in the same order, and return exactly
+   one category per input word using the word as given (same spelling).
+
+Return your answer as a single JSON object mapping each word to its
+category string, using only the 27 category names listed above.
