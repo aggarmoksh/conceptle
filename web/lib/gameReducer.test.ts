@@ -8,6 +8,12 @@ import {
 
 const RANKS = { battery: 1, charge: 2, recharge: 3, banana: 15432 };
 
+// Phase 1.5.1: surface-form -> lemma map, and a ranks table matching the
+// user-provided test cases (day 15's real "hunter" -> rank 10, plus
+// run/cat for the "running"/"cats" cases).
+const FORMS = { hunters: "hunter", running: "run", cats: "cat" };
+const RANKS_WITH_LEMMAS = { hunter: 10, run: 87, cat: 4 };
+
 describe("submitGuess", () => {
   test("adds a new valid guess and reports its band", () => {
     const result = submitGuess(initialGameState(), "charge", RANKS);
@@ -94,6 +100,64 @@ describe("bestRank", () => {
     let state = submitGuess(initialGameState(), "banana", RANKS).state;
     state = submitGuess(state, "recharge", RANKS).state;
     expect(bestRank(state)).toBe(3);
+  });
+});
+
+describe("submitGuess with forms.json lemma resolution (Phase 1.5.1)", () => {
+  // The six required test cases from the Phase 1.5.1 kickoff.
+
+  test('"hunters" resolves via forms.json to hunter\'s rank (10)', () => {
+    const result = submitGuess(initialGameState(), "hunters", RANKS_WITH_LEMMAS, FORMS);
+    expect(result.kind).toBe("added");
+    if (result.kind !== "added") throw new Error("unreachable");
+    expect(result.state.guesses).toEqual([{ word: "hunters", rank: 10 }]);
+  });
+
+  test('"running" resolves to run\'s rank', () => {
+    const result = submitGuess(initialGameState(), "running", RANKS_WITH_LEMMAS, FORMS);
+    expect(result.kind).toBe("added");
+    if (result.kind !== "added") throw new Error("unreachable");
+    expect(result.state.guesses).toEqual([{ word: "running", rank: 87 }]);
+  });
+
+  test('"cats" resolves to cat\'s rank', () => {
+    const result = submitGuess(initialGameState(), "cats", RANKS_WITH_LEMMAS, FORMS);
+    expect(result.kind).toBe("added");
+    if (result.kind !== "added") throw new Error("unreachable");
+    expect(result.state.guesses).toEqual([{ word: "cats", rank: 4 }]);
+  });
+
+  test('"asdfgh" (no lemma mapping, not in ranks) is not-in-dictionary', () => {
+    const result = submitGuess(initialGameState(), "asdfgh", RANKS_WITH_LEMMAS, FORMS);
+    expect(result.kind).toBe("not-in-dictionary");
+  });
+
+  test('"hunter" (the lemma itself) still works exactly as before', () => {
+    const result = submitGuess(initialGameState(), "hunter", RANKS_WITH_LEMMAS, FORMS);
+    expect(result.kind).toBe("added");
+    if (result.kind !== "added") throw new Error("unreachable");
+    expect(result.state.guesses).toEqual([{ word: "hunter", rank: 10 }]);
+  });
+
+  test('guessing "hunter" then "hunters" triggers duplicate on the second', () => {
+    const afterFirst = submitGuess(initialGameState(), "hunter", RANKS_WITH_LEMMAS, FORMS).state;
+    const result = submitGuess(afterFirst, "hunters", RANKS_WITH_LEMMAS, FORMS);
+    expect(result.kind).toBe("duplicate");
+    expect(result.state.guesses).toHaveLength(1);
+  });
+
+  test('the reverse order ("hunters" then "hunter") also dedupes', () => {
+    const afterFirst = submitGuess(initialGameState(), "hunters", RANKS_WITH_LEMMAS, FORMS).state;
+    const result = submitGuess(afterFirst, "hunter", RANKS_WITH_LEMMAS, FORMS);
+    expect(result.kind).toBe("duplicate");
+    expect(result.state.guesses).toHaveLength(1);
+  });
+
+  test("with no forms map (default {}), behavior is unchanged: exact match only", () => {
+    // hunters is not itself a key in RANKS_WITH_LEMMAS, and no forms map is
+    // passed, so it must fail exactly like the pre-1.5.1 behavior.
+    const result = submitGuess(initialGameState(), "hunters", RANKS_WITH_LEMMAS);
+    expect(result.kind).toBe("not-in-dictionary");
   });
 });
 

@@ -43,11 +43,34 @@ Filtering applied, in order:
      BLOCKLIST, vocab_blocklist.txt, lemma dedup) normally; only the PROPN drop is
      skipped for it.
 
+Phase 1.5.1 addition: also writes forms.json, a surface-form -> lemma map (e.g.
+"hunters" -> "hunter") for every surface form seen in this same lemmatization pass
+whose lemma survived into vocabulary.txt. This fixes a client/pipeline mismatch:
+the pipeline lemmatizes vocabulary at build time, but the web client was doing a
+literal string lookup, so a player typing a natural inflection ("hunters") that
+isn't itself a vocabulary entry got a false "not in dictionary". forms.json lets
+the client translate a typed surface form to its lemma before rank lookup.
+
+This is purely additive instrumentation on the SAME lemmatization pass that
+produces vocabulary.txt: the control flow that decides what goes into
+`final`/`seen_lemmas` is untouched, so vocabulary.txt (and therefore
+embeddings.npy, which is derived from it) must come out byte-identical to before.
+Verified by diffing vocabulary.txt across the rerun; see the Phase 1.5.1 report.
+
+Written to two places: pipeline/data/forms.json (source of truth, pipeline-
+internal) and web/public/puzzles/forms.json (the copy the client actually
+fetches, alongside the per-day puzzle JSONs). No new pipeline step or ordering
+dependency: build_vocabulary.py is the natural single owner of this mapping
+since it is a byproduct of the same lemmatization pass, not something
+generate_puzzles.py's per-day ranking logic touches.
+
 Run: .venv/Scripts/python.exe pipeline/build_vocabulary.py
 """
 
 from __future__ import annotations
 
+import json
+import os
 import random
 import re
 
@@ -59,7 +82,23 @@ RAW_POOL_SIZE = 32000
 OUTPUT_PATH = "pipeline/data/vocabulary.txt"
 WHITELIST_PATH = "pipeline/data/vocab_whitelist.txt"
 EXTERNAL_BLOCKLIST_PATH = "pipeline/data/vocab_blocklist.txt"
+FORMS_OUTPUT_PATH = "pipeline/data/forms.json"
+FORMS_SHIPPED_PATH = "web/public/puzzles/forms.json"
 REPORT_SEED = 2026  # for the reproducible PROPN spot-check sample, not gameplay
+
+# Common lexically-ambiguous English forms (a single surface form with two
+# unrelated readings, e.g. "leaves" as plural-of-"leaf" vs. 3rd-person-singular
+# of "leave"). spaCy's tagger picks one reading per isolated word with no
+# sentence context to disambiguate, same as everywhere else in this pipeline;
+# this list is only used to report which of them ended up in forms.json and
+# what spaCy resolved them to, for the Phase 1.5.1 report's spot-check ask.
+# Not a filter, not a correction: purely diagnostic.
+KNOWN_AMBIGUOUS_FORMS = {
+    "leaves", "bats", "saws", "rows", "wounds", "axes", "bores", "leads",
+    "objects", "produces", "records", "presents", "permits", "projects",
+    "refuses", "contracts", "conducts", "converts", "rebels", "subjects",
+    "closes", "houses", "uses", "bows", "winds", "tears", "does", "lives",
+}
 
 ALPHA_RE = re.compile(r"^[a-z]+$")
 
@@ -143,7 +182,7 @@ def lemmatize_dedupe_and_filter_propn(
     words: list[str],
     whitelist: set[str],
     extra_blocklist: set[str],
-) -> tuple[list[str], list[str]]:
+) -> tuple[list[str], list[str], dict[str, str]]:
     """Lemmatize, drop proper nouns, and collapse inflectional variants to one entry each.
 
     Proper-noun filter (Phase 1.5 task 2): each word is POS-tagged by spaCy in
@@ -161,13 +200,21 @@ def lemmatize_dedupe_and_filter_propn(
     and its lemma.
 
     Order is preserved by first (highest-frequency) occurrence of each lemma.
-    Returns (final_vocabulary, words_dropped_for_being_tagged_propn).
+    Returns (final_vocabulary, words_dropped_for_being_tagged_propn, forms).
+
+    `forms` (Phase 1.5.1) maps every surface form processed here whose lemma
+    differs from itself AND survived into `final`, to that lemma (e.g.
+    "hunters" -> "hunter"). It is built by observing the exact same
+    accept/reject decisions used to build `final` below, just also recording
+    the surface form when it differs from a lemma that made the cut; it never
+    changes which lemmas make it into `final`.
     """
     nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
 
     final: list[str] = []
     seen_lemmas: set[str] = set()
     removed_propn: list[str] = []
+    forms: dict[str, str] = {}
     for doc in nlp.pipe(words, batch_size=512):
         token = doc[0]
         surface = token.text.lower()
@@ -185,12 +232,16 @@ def lemmatize_dedupe_and_filter_propn(
             continue
         if lemma in BLOCKLIST:
             continue
-        if lemma in seen_lemmas:
-            continue
-        seen_lemmas.add(lemma)
-        final.append(lemma)
+        if lemma not in seen_lemmas:
+            seen_lemmas.add(lemma)
+            final.append(lemma)
+        if surface != lemma:
+            # `words` (the pre-lemma pool) is already deduplicated upstream in
+            # build_pre_lemma_vocabulary, so each surface form is processed at
+            # most once here; there is no dict-collision case to resolve.
+            forms[surface] = lemma
 
-    return final, removed_propn
+    return final, removed_propn, forms
 
 
 def main() -> None:
@@ -204,7 +255,9 @@ def main() -> None:
     print(f"Vocab size before lemmatization: {len(pre_lemma)}")
 
     print("Lemmatizing with spaCy (en_core_web_sm), dropping PROPN, and deduping...")
-    vocabulary, removed_propn = lemmatize_dedupe_and_filter_propn(pre_lemma, whitelist, extra_blocklist)
+    vocabulary, removed_propn, forms = lemmatize_dedupe_and_filter_propn(
+        pre_lemma, whitelist, extra_blocklist
+    )
     print(f"Vocab size after lemmatization + PROPN filter: {len(vocabulary)}")
     print(f"Words dropped for being tagged PROPN: {len(removed_propn)}")
 
@@ -220,6 +273,22 @@ def main() -> None:
     print(f"Wrote {OUTPUT_PATH}")
     print("First 20:", vocabulary[:20])
     print("Last 20:", vocabulary[-20:])
+
+    # Phase 1.5.1: surface-form -> lemma map for the client's guess resolution.
+    print(f"\nBuilt forms.json: {len(forms)} surface form(s) map to a different, retained lemma")
+    with open(FORMS_OUTPUT_PATH, "w", encoding="utf-8") as f:
+        json.dump(forms, f, sort_keys=True, indent=None, separators=(",", ":"))
+    print(f"Wrote {FORMS_OUTPUT_PATH}")
+
+    os.makedirs(os.path.dirname(FORMS_SHIPPED_PATH), exist_ok=True)
+    with open(FORMS_SHIPPED_PATH, "w", encoding="utf-8") as f:
+        json.dump(forms, f, sort_keys=True, indent=None, separators=(",", ":"))
+    print(f"Wrote {FORMS_SHIPPED_PATH} (shipped copy, same content)")
+
+    found_ambiguous = {w: forms[w] for w in KNOWN_AMBIGUOUS_FORMS if w in forms}
+    print(f"\nKnown-ambiguous forms found in forms.json ({len(found_ambiguous)}):")
+    for word in sorted(found_ambiguous):
+        print(f"  {word:<12} -> {found_ambiguous[word]}")
 
 
 if __name__ == "__main__":

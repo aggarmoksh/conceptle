@@ -11,6 +11,7 @@ import {
   type GameState,
   type SubmitResult,
 } from "@/lib/gameReducer";
+import { fetchForms, type FormMap } from "@/lib/forms";
 import { decodeTargetHint, fetchPuzzle, type PuzzleData } from "@/lib/puzzle";
 import { isStorageAvailable, loadGameState, saveGameState } from "@/lib/storage";
 import {
@@ -44,15 +45,20 @@ export function Game() {
 
   const [load, setLoad] = useState<LoadState>({ status: "loading" });
   const [game, setGame] = useState<GameState>(initialGameState());
+  const [forms, setForms] = useState<FormMap>({});
   const [announcement, setAnnouncement] = useState("");
   const [storageAvailable, setStorageAvailable] = useState(true);
   const [showStorageNotice, setShowStorageNotice] = useState(false);
 
   const loadPuzzle = useCallback(() => {
     setLoad({ status: "loading" });
-    fetchPuzzle(day)
-      .then((puzzle) => {
+    // forms.json is a correctness improvement (Phase 1.5.1), not a hard
+    // dependency like the puzzle itself: fetchForms() never rejects, so a
+    // failure there can't turn into a spurious full-page error here.
+    Promise.all([fetchPuzzle(day), fetchForms()])
+      .then(([puzzle, formMap]) => {
         setLoad({ status: "ready", puzzle });
+        setForms(formMap);
         const available = isStorageAvailable();
         setStorageAvailable(available);
         setShowStorageNotice(!available);
@@ -78,7 +84,7 @@ export function Game() {
 
   function handleSubmit(raw: string): SubmitResult["kind"] {
     if (load.status !== "ready") return "empty";
-    const result = submitGuess(game, raw, load.puzzle.ranks);
+    const result = submitGuess(game, raw, load.puzzle.ranks, forms);
     setGame(result.state);
 
     const normalized = normalizeGuess(raw);
