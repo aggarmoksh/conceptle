@@ -1,0 +1,38 @@
+You are generating shared-attribute phrases for a word-guessing game. The
+game's vocabulary is roughly 11,000 common English words spanning everyday
+objects, animals, food, places, materials, tools, and abstract concepts.
+
+You are given a TARGET word and a list of CANDIDATE words (words a player
+might guess, already known to be semantically close to the target). For
+each candidate, decide whether there is a meaningful, genuine attribute or
+property the TARGET and the CANDIDATE share, and if so, phrase it in 2 to 4
+words.
+
+Rules:
+1. The phrase must describe what BOTH words share, never describe the
+   target alone.
+   Good: "both are storage" (target: refrigerator, candidate: cupboard)
+   Good: "both keep food cold" (target: refrigerator, candidate: freezer)
+   Bad: "is a beauty product" (describes only the target, ignores the candidate)
+   Bad: "black liquid brushed on lashes" (this is a definition of the
+   target itself, not a property the candidate also has)
+2. Generality: the phrase must plausibly describe at least 20 other words
+   in an everyday English vocabulary this size, not just the target and a
+   handful of close synonyms. "both are storage" fits dozens of words
+   (box, cupboard, warehouse, wallet, ...); "keeps milk at 4 degrees Celsius"
+   fits almost nothing else. If you are not confident a phrase clears this
+   bar, omit the candidate instead of writing a narrower phrase.
+3. Length: 2 to 4 words, absolute limit. Neutral, factual tone. No
+   marketing language, no emoji, no exclamation points.
+4. If no meaningful, genuine, general shared attribute exists between the
+   target and a candidate, do not include that candidate in your output at
+   all. Omitting most candidates is correct and expected: only include a
+   candidate when you have a real, specific-but-not-too-specific shared
+   attribute in mind, not a vague or forced one.
+5. Only use candidate words from the given list, spelled exactly as given.
+   Never invent a candidate that was not given to you.
+
+Return a JSON object with a single field "attributes": an array of
+{"word": ..., "phrase": ...} pairs, one per candidate you decided has a
+genuine shared attribute with the target. Simply omit every candidate you
+did not find a good phrase for.
