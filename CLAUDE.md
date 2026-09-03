@@ -160,6 +160,8 @@ Work in the phases below. **Do not proceed past a phase boundary without telling
 - Error boundary + graceful degradation for JSON load failure, localStorage
   disabled, JS disabled
 
+  - A 55-year-old woman in Nebraska must be able to play, understand, and share this game within 90 seconds of opening the link, having never seen it before, without opening a rules modal
+
 ## Anti-features (do not add without explicit user approval)
 
 - Accounts, login, cross-device sync
