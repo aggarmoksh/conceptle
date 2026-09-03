@@ -1,0 +1,25 @@
+# Manual overrides for isolated-word POS ambiguity. spaCy has no sentence
+# context; these are hand-picked to match player intent.
+#
+# Format: surface<TAB>lemma. These win over BOTH the wordfreq-derived and
+# grammar-generated forms.json entries (see pipeline/build_forms.py), even
+# when the surface form is itself a distinct, standalone vocabulary lemma
+# with an unrelated meaning: that is a deliberate, accepted tradeoff for the
+# entries below where the surface form itself has its own vocabulary entry
+# (rose, bore, wound, lay) -- typing that word will now always resolve to
+# the override target, and the word's own distinct sense becomes unreachable
+# by typing it directly for the rest of that day's puzzle. See the Phase
+# 1.5.1 follow-up report for which entries carry this tradeoff.
+leaves	leaf
+saw	see
+left	leave
+rose	rise
+bore	bear
+wound	wind
+lay	lie
+# Added independently (Phase 1.5.1 follow-up task 2's "any others you can
+# think of"): same structural ambiguity as leaves/leaf -- "axes" is not
+# itself a standalone vocabulary lemma, only "axe" and "axis" are, and a
+# player typing "axes" is far more likely to mean the plural of the tool
+# than the plural of the math term. Does not shadow an existing word.
+axes	axe
