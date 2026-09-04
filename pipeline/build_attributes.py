@@ -7,7 +7,7 @@ a genuine one, via one claude-sonnet-4-6 call per target with a JSON-schema
 structured output. Candidates with no meaningful shared attribute are
 simply omitted by the model, never filled with a forced/weak phrase.
 
-Two modes:
+Three modes:
   --dry-run: runs only the 3 advisor-specified sample targets (refrigerator,
     guitar, bicycle), reports actual token usage and cost, extrapolates to
     304 targets, and writes the raw sample output to
@@ -15,17 +15,24 @@ Two modes:
     write into pipeline/data/attributes/ or web/public/attributes/, since
     these 3 words are not necessarily tied to a real puzzle day (guitar is
     not currently in targets.txt; see the Task B report for that flag).
+  --filter-only: Phase 1.6 closure. Makes NO API calls. Re-applies
+    is_blacklisted() (see below) to the attribute phrases ALREADY on disk
+    in pipeline/data/attributes/dayN.json, dropping any pair whose phrase
+    matches pipeline/data/attribute_blacklist.txt, and rewrites both copies
+    (source + shipped). Use this to ship a post-hoc filter fix without
+    re-prompting the model.
   (default) full run: for day 1 through 60, reads that day's target from the
     ALREADY-GENERATED web/public/puzzles/dayN.json (read-only: decodes
-    target_hint, never modifies the file), generates attributes, and writes
-    pipeline/data/attributes/dayN.json (source of truth) and
+    target_hint, never modifies the file), generates attributes (applying
+    the blacklist filter alongside the existing validation checks), and
+    writes pipeline/data/attributes/dayN.json (source of truth) and
     web/public/attributes/dayN.json (shipped copy, same content).
 
 Does not touch vocabulary.txt, embeddings.npy, targets.txt,
 target_order.txt, forms.json, categories.json, existing puzzle JSONs, or
 any web/ application code.
 
-Run: .venv/Scripts/python.exe pipeline/build_attributes.py [--dry-run]
+Run: .venv/Scripts/python.exe pipeline/build_attributes.py [--dry-run|--filter-only]
 """
 
 from __future__ import annotations
@@ -33,6 +40,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+import re
 import sys
 
 import anthropic
@@ -44,6 +52,7 @@ from generate_puzzles import is_lexically_contaminated, load_words
 VOCAB_PATH = "pipeline/data/vocabulary.txt"
 EMBEDDINGS_PATH = "pipeline/data/embeddings.npy"
 PROMPT_PATH = "pipeline/prompts/attribute_generator.txt"
+BLACKLIST_PATH = "pipeline/data/attribute_blacklist.txt"
 PUZZLES_DIR = "web/public/puzzles"  # read-only in this script
 ATTRIBUTES_OUT_DIR = "pipeline/data/attributes"
 ATTRIBUTES_SHIPPED_DIR = "web/public/attributes"
@@ -78,6 +87,23 @@ ATTRIBUTE_SCHEMA = {
 }
 
 
+def load_blacklist_patterns(path: str = BLACKLIST_PATH) -> list[re.Pattern]:
+    """One regex per non-comment line, case-insensitive. See
+    pipeline/data/attribute_blacklist.txt (Phase 1.6 closure fix)."""
+    patterns = []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            patterns.append(re.compile(line, re.IGNORECASE))
+    return patterns
+
+
+def is_blacklisted(phrase: str, patterns: list[re.Pattern]) -> bool:
+    return any(p.search(phrase) for p in patterns)
+
+
 def top_neighbors(
     target: str,
     vocabulary: list[str],
@@ -105,7 +131,11 @@ def top_neighbors(
 
 
 def generate_attributes_for_target(
-    client: anthropic.Anthropic, system_prompt: str, target: str, candidates: list[str]
+    client: anthropic.Anthropic,
+    system_prompt: str,
+    target: str,
+    candidates: list[str],
+    blacklist_patterns: list[re.Pattern] | None = None,
 ) -> tuple[dict[str, str], anthropic.types.Usage]:
     numbered = "\n".join(f"{i + 1}. {w}" for i, w in enumerate(candidates))
     user_message = f'Target: "{target}"\n\nCandidates:\n{numbered}'
@@ -137,6 +167,9 @@ def generate_attributes_for_target(
         if word in result:
             dropped.append((word, phrase, "duplicate word"))
             continue
+        if blacklist_patterns and is_blacklisted(phrase, blacklist_patterns):
+            dropped.append((word, phrase, "blacklisted phrase"))
+            continue
         result[word] = phrase
 
     if dropped:
@@ -158,20 +191,23 @@ def load_shared_state():
     vocab_embeddings = np.load(EMBEDDINGS_PATH)
     with open(PROMPT_PATH, encoding="utf-8") as f:
         system_prompt = f.read()
+    blacklist_patterns = load_blacklist_patterns()
     model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device="cpu")
     client = anthropic.Anthropic(timeout=600.0)
-    return vocabulary, vocab_set, vocab_embeddings, system_prompt, model, client
+    return vocabulary, vocab_set, vocab_embeddings, system_prompt, blacklist_patterns, model, client
 
 
 def run_dry_run() -> None:
-    vocabulary, vocab_set, vocab_embeddings, system_prompt, model, client = load_shared_state()
+    vocabulary, vocab_set, vocab_embeddings, system_prompt, blacklist_patterns, model, client = load_shared_state()
 
     total_cost = 0.0
     sample_output: dict[str, dict] = {}
     for target in DRY_RUN_TARGETS:
         candidates = top_neighbors(target, vocabulary, vocab_embeddings, vocab_set, model)
         print(f"Target '{target}': {len(candidates)} candidates, calling {MODEL}...")
-        attributes, usage = generate_attributes_for_target(client, system_prompt, target, candidates)
+        attributes, usage = generate_attributes_for_target(
+            client, system_prompt, target, candidates, blacklist_patterns
+        )
         cost = cost_for_usage(usage)
         total_cost += cost
         print(
@@ -203,7 +239,7 @@ def run_dry_run() -> None:
 
 
 def run_full() -> None:
-    vocabulary, vocab_set, vocab_embeddings, system_prompt, model, client = load_shared_state()
+    vocabulary, vocab_set, vocab_embeddings, system_prompt, blacklist_patterns, model, client = load_shared_state()
 
     os.makedirs(ATTRIBUTES_OUT_DIR, exist_ok=True)
     os.makedirs(ATTRIBUTES_SHIPPED_DIR, exist_ok=True)
@@ -218,7 +254,9 @@ def run_full() -> None:
 
         candidates = top_neighbors(target, vocabulary, vocab_embeddings, vocab_set, model)
         print(f"Day {day}/{NUM_DAYS}, target '{target}': {len(candidates)} candidates...")
-        attributes, usage = generate_attributes_for_target(client, system_prompt, target, candidates)
+        attributes, usage = generate_attributes_for_target(
+            client, system_prompt, target, candidates, blacklist_patterns
+        )
         cost = cost_for_usage(usage)
         total_cost += cost
         print(f"  {len(attributes)}/{len(candidates)} got a phrase, cost=${cost:.4f}, running total=${total_cost:.2f}")
@@ -237,8 +275,63 @@ def run_full() -> None:
         print(f"  day {day}: '{target}' -> {count} attributes")
 
 
+def run_filter_only() -> None:
+    """Phase 1.6 closure: NO API calls. Re-applies the blacklist filter to
+    the attribute files already on disk and rewrites both copies."""
+    blacklist_patterns = load_blacklist_patterns()
+    print(f"Loaded {len(blacklist_patterns)} blacklist pattern(s) from {BLACKLIST_PATH}")
+
+    total_removed = 0
+    removed_examples: list[tuple[int, str, str, str]] = []  # (day, target, word, phrase)
+    low_coverage_days = []
+
+    for day in range(1, NUM_DAYS + 1):
+        src_path = os.path.join(ATTRIBUTES_OUT_DIR, f"day{day}.json")
+        with open(src_path, encoding="utf-8") as f:
+            payload = json.load(f)
+        attributes = payload["attributes"]
+
+        puzzle_path = os.path.join(PUZZLES_DIR, f"day{day}.json")
+        with open(puzzle_path, encoding="utf-8") as f:
+            target = base64.b64decode(json.load(f)["target_hint"]).decode("utf-8")
+
+        kept = {}
+        for word, phrase in attributes.items():
+            if is_blacklisted(phrase, blacklist_patterns):
+                total_removed += 1
+                removed_examples.append((day, target, word, phrase))
+            else:
+                kept[word] = phrase
+
+        if len(kept) != len(attributes):
+            payload["attributes"] = kept
+            for out_dir in (ATTRIBUTES_OUT_DIR, ATTRIBUTES_SHIPPED_DIR):
+                with open(os.path.join(out_dir, f"day{day}.json"), "w", encoding="utf-8") as f:
+                    json.dump(payload, f, separators=(",", ":"))
+
+        if len(kept) < 30:
+            low_coverage_days.append((day, target, len(kept)))
+
+    print(f"\nNo API calls made. New cost: $0.00 (cumulative dataset cost unchanged from the last generation run).")
+    print(f"\nTotal phrases removed by the blacklist filter across 60 days: {total_removed}")
+    if removed_examples:
+        print("Removed (day, target, guess, phrase):")
+        for day, target, word, phrase in removed_examples:
+            print(f"  day {day} '{target}' / '{word}' -> {phrase!r}")
+    else:
+        print("Nothing matched the blacklist.")
+
+    print(f"\nDays with fewer than 30 attributes after filtering ({len(low_coverage_days)}):")
+    for day, target, count in low_coverage_days:
+        print(f"  day {day}: '{target}' -> {count} attributes")
+    if len(low_coverage_days) > 35:
+        print("*** MORE THAN 35 DAYS UNDER 30 ATTRIBUTES: flag for advisor review. ***")
+
+
 if __name__ == "__main__":
     if "--dry-run" in sys.argv:
         run_dry_run()
+    elif "--filter-only" in sys.argv:
+        run_filter_only()
     else:
         run_full()

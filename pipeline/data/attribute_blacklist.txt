@@ -1,0 +1,5 @@
+# Attribute phrases matching these patterns will be omitted
+# from the generated attribute files. Regex, case-insensitive.
+^used to (cut|slice|chop|slash|stab|pierce)$
+^used for (cutting|slicing|chopping)$
+^cuts?$
