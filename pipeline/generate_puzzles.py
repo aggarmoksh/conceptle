@@ -1,12 +1,22 @@
 """Generate web/public/puzzles/dayN.json for day 1 through NUM_DAYS.
 
 Determinism rules (see CLAUDE.md):
-  - The day-N target comes from a fixed pre-shuffled order of pipeline/data/targets.txt.
-    That order is shuffled once with SHUFFLE_SEED and written to
-    pipeline/data/target_order.txt. On every subsequent run this script reads the
-    existing order file instead of re-shuffling, so the schedule never changes even if
-    targets.txt gains new entries later (new entries simply are not reachable until the
-    order file is regenerated on purpose).
+  - Phase 1.6 target-override closure: days 1 through len(target_override.txt) (30 as
+    of this writing) use that file's line N as day N's target, in file order, instead
+    of the shuffle below. This is a deliberate hand-picked opening sequence, layered on
+    top of the shuffle mechanism rather than replacing it. Days beyond the override
+    list fall back to the shuffled order from target_order.txt, skipping any word that
+    also appears in target_override.txt so no target is ever assigned to two different
+    days. target_order.txt itself is NEVER modified by this: it is name-based (a list
+    of words, not indices), so appending new targets to targets.txt or adding an
+    override file does not shift or invalidate any existing entry in it. See
+    load_day_targets().
+  - For days beyond the override list, the day-N target comes from a fixed
+    pre-shuffled order of pipeline/data/targets.txt. That order is shuffled once with
+    SHUFFLE_SEED and written to pipeline/data/target_order.txt. On every subsequent run
+    this script reads the existing order file instead of re-shuffling, so the schedule
+    never changes even if targets.txt gains new entries later (new entries simply are
+    not reachable until the order file is regenerated on purpose).
   - Rankings are computed once, offline, from the vocabulary embeddings built by
     build_embeddings.py. The client only ever reads the resulting JSON.
   - Each day's target is guaranteed rank 1: it is folded into that day's ranking set
@@ -58,6 +68,7 @@ VOCAB_PATH = "pipeline/data/vocabulary.txt"
 EMBEDDINGS_PATH = "pipeline/data/embeddings.npy"
 TARGETS_PATH = "pipeline/data/targets.txt"
 ORDER_PATH = "pipeline/data/target_order.txt"
+OVERRIDE_PATH = "pipeline/data/target_override.txt"
 OUTPUT_DIR = "web/public/puzzles"
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
@@ -125,6 +136,34 @@ def load_or_create_target_order(targets: list[str]) -> list[str]:
     return order
 
 
+def load_day_targets(target_order: list[str]) -> list[str]:
+    """Day N's target for N in 1..NUM_DAYS.
+
+    Days 1..len(target_override.txt) use that file's line N, in order (Phase 1.6
+    target-override closure: a deliberate hand-picked opening sequence).
+
+    Note: guitar is a DENSE_CLUSTER target per pipeline/data/
+    targets_review_v2.txt, kept as day-11 override by advisor decision due to
+    universal cultural recognition. Other DENSE_CLUSTER targets remain excluded.
+
+    Days beyond the override list fall back to target_order.txt's frozen shuffle,
+    skipping any word already used as an override target so nothing is assigned
+    to two different days.
+    """
+    override = load_words(OVERRIDE_PATH) if os.path.exists(OVERRIDE_PATH) else []
+    override_set = set(override)
+    fallback = [w for w in target_order if w not in override_set]
+
+    days_targets = []
+    for day in range(1, NUM_DAYS + 1):
+        if day <= len(override):
+            days_targets.append(override[day - 1])
+        else:
+            idx = (day - len(override) - 1) % len(fallback)
+            days_targets.append(fallback[idx])
+    return days_targets
+
+
 def main() -> None:
     vocabulary = load_words(VOCAB_PATH)
     vocab_embeddings = np.load(EMBEDDINGS_PATH)
@@ -138,7 +177,7 @@ def main() -> None:
     print(f"Loaded {len(targets)} candidate targets from {TARGETS_PATH}")
     target_order = load_or_create_target_order(targets)
 
-    days_targets = [target_order[(day - 1) % len(target_order)] for day in range(1, NUM_DAYS + 1)]
+    days_targets = load_day_targets(target_order)
     unique_needed = sorted(set(days_targets))
 
     print(f"Loading model {MODEL_NAME} (CPU) to embed {len(unique_needed)} target word(s)...")

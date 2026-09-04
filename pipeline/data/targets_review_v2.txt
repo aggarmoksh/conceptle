@@ -356,3 +356,7 @@ ABSTRACT_WITH_ANTONYM	honesty	dishonesty/deception
 ABSTRACT_SAFE	ambition	No single dominant antonym; complacency is weak and not culturally fixed as opposite
 ABSTRACT_WITH_ANTONYM	wisdom	foolishness/ignorance
 ABSTRACT_WITH_ANTONYM	justice	injustice
+CONCRETE	bread	added Phase 1.6 target-override, advisor-vetted
+CONCRETE	fossil	added Phase 1.6 target-override, advisor-vetted
+CONCRETE	passport	added Phase 1.6 target-override, advisor-vetted
+AMBIGUOUS	guitar	restored Phase 1.6 as DENSE_CLUSTER exception, advisor-vetted for iconic use

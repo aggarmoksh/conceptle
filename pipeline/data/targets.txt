@@ -329,3 +329,15 @@ melody
 symphony
 orchestra
 ambition
+
+# --- Phase 1.6 target-override closure additions ---
+# Added to track these as first-class targets going forward, per advisor
+# decision, since they are now used as day-override targets (see
+# pipeline/data/target_override.txt). bread/fossil/passport were never
+# curated before; guitar was previously removed as DENSE_CLUSTER and is
+# restored here as a deliberate exception (see generate_puzzles.py's
+# load_day_targets() for the day-11 guitar note).
+bread
+fossil
+passport
+guitar
