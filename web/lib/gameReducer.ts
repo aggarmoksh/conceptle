@@ -199,17 +199,16 @@ export function dismissProbePanel(state: GameState): GameState {
 }
 
 /**
- * Best (lowest) rank achieved so far, or undefined if nothing has been
- * looked up yet. Includes probes: the Phase 2.5.1 kickoff says probes
- * "show rank, category tag, and attribute phrase, exactly like a real
- * guess," naming only two explicit exceptions (the 6-guess budget and the
- * share string). The thermometer and lose-tier message aren't in either
- * exception, so a probe that happens to land a great rank moves the
- * thermometer and can improve the eventual lose-tier message, same as a
- * real guess would.
+ * Best (lowest) rank achieved so far across REAL guesses only, or undefined
+ * if none yet. Probes are excluded, by explicit correction after the first
+ * Phase 2.5.1 pass shipped this reading probes too: probes are scaffolding,
+ * not play. They inform the player during the round and leave no trace on
+ * the record, including the share string, the thermometer, and any future
+ * stats. A probe landing a great rank must never produce a "so close, your
+ * best was rank 3" lose message, or move the thermometer, when the
+ * player's own six guesses never got that close.
  */
 export function bestRank(state: GameState): number | undefined {
-  const all = [...state.guesses, ...state.probes];
-  if (all.length === 0) return undefined;
-  return Math.min(...all.map((g) => g.rank));
+  if (state.guesses.length === 0) return undefined;
+  return Math.min(...state.guesses.map((g) => g.rank));
 }

@@ -269,7 +269,7 @@ describe("dismissProbePanel", () => {
 });
 
 describe("bestRank", () => {
-  test("undefined with nothing guessed or probed", () => {
+  test("undefined with nothing guessed (probes alone don't count)", () => {
     expect(bestRank(initialGameState())).toBeUndefined();
   });
 
@@ -279,11 +279,45 @@ describe("bestRank", () => {
     expect(bestRank(state)).toBe(3);
   });
 
-  test("includes probes: a probe's rank can set the best, per the kickoff's 'exactly like a real guess' framing", () => {
+  test("excludes probes entirely, even a probe far better than any real guess (correction: probes are scaffolding, not play)", () => {
     const probeDay: DayData = { ranks: { animal: 2 }, forms: {}, categories: {}, attributes: {} };
-    let state = submitGuess(initialGameState(), "banana", DAY).state;
-    state = submitProbe(state, "animal", probeDay).state;
-    expect(bestRank(state)).toBe(2);
+    let state = submitGuess(initialGameState(), "banana", DAY).state; // rank 15432
+    state = submitProbe(state, "animal", probeDay).state; // rank 2, must be ignored
+    expect(bestRank(state)).toBe(15432);
+  });
+
+  test("undefined when only probes exist and no real guess has been made yet", () => {
+    const probeDay: DayData = { ranks: { animal: 2 }, forms: {}, categories: {}, attributes: {} };
+    const state = submitProbe(initialGameState(), "animal", probeDay).state;
+    expect(bestRank(state)).toBeUndefined();
+  });
+
+  // The 3 specific cases named in the correction's kickoff.
+  test("a probe at rank 3 does not affect bestRank when the player has not guessed yet", () => {
+    const probeDay: DayData = { ranks: { animal: 3 }, forms: {}, categories: {}, attributes: {} };
+    const state = submitProbe(initialGameState(), "animal", probeDay).state;
+    expect(bestRank(state)).toBeUndefined();
+  });
+
+  test("a probe at rank 3 followed by a real guess at rank 50: bestRank is 50, not 3", () => {
+    const day: DayData = { ranks: { animal: 3, guess: 50 }, forms: {}, categories: {}, attributes: {} };
+    let state = submitProbe(initialGameState(), "animal", day).state;
+    state = submitGuess(state, "guess", day).state;
+    expect(bestRank(state)).toBe(50);
+  });
+
+  test("six real guesses all above 1000, plus a rank-3 probe: bestRank reflects only the real guesses", () => {
+    const day: DayData = {
+      ranks: { animal: 3, a: 1001, b: 1002, c: 1003, d: 1004, e: 1005, f: 1006 },
+      forms: {},
+      categories: {},
+      attributes: {},
+    };
+    let state = submitProbe(initialGameState(), "animal", day).state;
+    for (const word of ["a", "b", "c", "d", "e", "f"]) {
+      state = submitGuess(state, word, day).state;
+    }
+    expect(bestRank(state)).toBe(1001);
   });
 });
 

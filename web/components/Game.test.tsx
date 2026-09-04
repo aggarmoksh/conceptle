@@ -128,6 +128,64 @@ test("losing after 6 wrong guesses shows the lose state with a live share button
   expect(copied).toContain("Conceptle #1  X/6");
 });
 
+// Phase 2.5.1 correction: probes are scaffolding, not play. They must not
+// affect the thermometer or the lose-tier message.
+test("a rank-3 probe does not pull the lose message into the 'so close' tier when all 6 real guesses are above 1000", async () => {
+  const puzzleWithGreatProbe = {
+    day: 1,
+    target_hint: Buffer.from("kitchen").toString("base64"),
+    ranks: {
+      kitchen: 1,
+      animal: 3, // a probe landing here must be ignored for bestRank
+      wrongone: 5000,
+      wrongtwo: 5001,
+      wrongthree: 5002,
+      wrongfour: 5003,
+      wrongfive: 5004,
+      wrongsix: 5005,
+    },
+    vocab_size: 8,
+  };
+  global.fetch = jest.fn((input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes("forms.json")) return Promise.resolve({ ok: true, json: async () => ({}) });
+    if (url.includes("categories.json")) return Promise.resolve({ ok: true, json: async () => ({}) });
+    if (url.includes("/attributes/")) return Promise.resolve({ ok: true, json: async () => ({ day: 1, attributes: {} }) });
+    return Promise.resolve({ ok: true, json: async () => puzzleWithGreatProbe });
+  }) as unknown as typeof fetch;
+
+  const user = userEvent.setup();
+  render(<Game />);
+
+  await screen.findByText("Not sure where to start?");
+  await user.click(screen.getByRole("button", { name: "animal" }));
+  await screen.findByText("3"); // the probe's rank rendered in the list
+
+  for (const word of ["wrongone", "wrongtwo", "wrongthree", "wrongfour", "wrongfive", "wrongsix"]) {
+    await submitGuessByTyping(user, word);
+  }
+
+  await screen.findByTestId("revealed-target");
+  expect(screen.getByText("Tough one today. See you tomorrow, we all get one.")).toBeInTheDocument();
+  expect(screen.queryByText(/So close/)).not.toBeInTheDocument();
+});
+
+test("the thermometer reflects the best real guess and ignores a better probe", async () => {
+  const user = userEvent.setup();
+  render(<Game />);
+
+  await screen.findByText("Not sure where to start?");
+  // animal probes at rank 40 (bright-green), a much better rank than any
+  // guess this test will submit.
+  await user.click(screen.getByRole("button", { name: "animal" }));
+  await screen.findByText("40");
+  expect(screen.getByLabelText("Best rank achieved this session: none yet")).toBeInTheDocument();
+
+  await submitGuessByTyping(user, "wrongone"); // rank 5000
+  expect(screen.getByLabelText("Best rank achieved this session: 5000")).toBeInTheDocument();
+  expect(screen.getByText("best 5000")).toBeInTheDocument();
+});
+
 test("guesses-remaining counts down and disappears once the game ends", async () => {
   const user = userEvent.setup();
   render(<Game />);
