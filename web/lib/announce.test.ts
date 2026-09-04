@@ -3,6 +3,7 @@ import {
   announcementForDuplicate,
   announcementForLost,
   announcementForNotInDictionary,
+  announcementForProbe,
 } from "./announce";
 
 describe("announcementForAdded", () => {
@@ -61,6 +62,18 @@ describe("announcementForDuplicate", () => {
 describe("announcementForNotInDictionary", () => {
   test("names the word", () => {
     expect(announcementForNotInDictionary("zzz")).toBe("zzz, not in dictionary");
+  });
+});
+
+describe("announcementForProbe (Phase 2.5.1)", () => {
+  test("prefixes 'Probe: ' and is otherwise identical to a real guess's announcement", () => {
+    expect(announcementForProbe("animal", 3, "animal", "both are creatures")).toBe(
+      `Probe: ${announcementForAdded("animal", 3, "animal", "both are creatures")}`,
+    );
+  });
+
+  test("works with no category/attribute, same as announcementForAdded", () => {
+    expect(announcementForProbe("tool", 900)).toBe("Probe: tool, rank 900, warm");
   });
 });
 

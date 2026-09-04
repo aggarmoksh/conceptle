@@ -1,16 +1,18 @@
 import {
   MAX_GUESSES,
   bestRank,
+  dismissProbePanel,
   guessesRemaining,
   initialGameState,
   isGameOver,
   isLost,
   submitGuess,
+  submitProbe,
   type DayData,
   type GameState,
 } from "./gameReducer";
 
-const RANKS = { battery: 1, charge: 2, recharge: 3, banana: 15432, apple: 600 };
+const RANKS = { battery: 1, charge: 2, recharge: 3, banana: 15432, apple: 3000 };
 const DAY: DayData = { ranks: RANKS, forms: {}, categories: {}, attributes: {} };
 
 // Phase 1.5.1: surface-form -> lemma map, and a ranks table matching the
@@ -20,7 +22,9 @@ const FORMS = { hunters: "hunter", running: "run", cats: "cat" };
 const RANKS_WITH_LEMMAS = { hunter: 10, run: 87, cat: 4 };
 const DAY_WITH_LEMMAS: DayData = { ranks: RANKS_WITH_LEMMAS, forms: FORMS, categories: {}, attributes: {} };
 
-// Phase 2.5: category/attribute lookups.
+// Phase 2.5 / 2.5.1: category/attribute lookups. Category threshold is
+// 2500 as of Phase 2.5.1 (raised from 500); apple's rank 3000 is chosen to
+// sit just past that, for the "hidden" case.
 const CATEGORIES = { battery: "appliance", apple: "food" };
 const ATTRIBUTES = { charge: "both involve electricity" };
 const DAY_WITH_METADATA: DayData = { ranks: RANKS, forms: {}, categories: CATEGORIES, attributes: ATTRIBUTES };
@@ -80,22 +84,35 @@ describe("submitGuess", () => {
     expect(result.state.guesses).toHaveLength(1);
   });
 
-  test("category is attached only when rank <= 500", () => {
-    // battery: rank 1 (<=500) -> category shown, but it also wins, so use
-    // apple (rank 600, > 500) and charge-adjacent words to check the gate.
-    const nearCategory = { ranks: { close: 50 }, forms: {}, categories: { close: "tool" }, attributes: {} };
+  test("category is attached when rank <= 2500 (Phase 2.5.1 threshold)", () => {
+    const nearCategory = { ranks: { close: 2400 }, forms: {}, categories: { close: "tool" }, attributes: {} };
     const result = submitGuess(initialGameState(), "close", nearCategory);
     expect(result.kind).toBe("added");
     if (result.kind !== "added") throw new Error("unreachable");
     expect(result.state.guesses[0]?.category).toBe("tool");
   });
 
-  test("category is omitted when rank > 500 even if categories.json has an entry", () => {
+  test("category is omitted when rank > 2500 even if categories.json has an entry", () => {
     const result = submitGuess(initialGameState(), "apple", DAY_WITH_METADATA);
     expect(result.kind).toBe("added");
     if (result.kind !== "added") throw new Error("unreachable");
-    expect(result.state.guesses[0]?.rank).toBe(600);
+    expect(result.state.guesses[0]?.rank).toBe(3000);
     expect(result.state.guesses[0]?.category).toBeUndefined();
+  });
+
+  // The exact boundary pair named in the Phase 2.5.1 kickoff's test list.
+  test("category renders at rank 2400, does not render at rank 2600", () => {
+    const boundaryDay: DayData = {
+      ranks: { hits: 2400, misses: 2600 },
+      forms: {},
+      categories: { hits: "tool", misses: "tool" },
+      attributes: {},
+    };
+    const hit = submitGuess(initialGameState(), "hits", boundaryDay);
+    const missState = submitGuess(initialGameState(), "misses", boundaryDay);
+    if (hit.kind !== "added" || missState.kind !== "added") throw new Error("unreachable");
+    expect(hit.state.guesses[0]?.category).toBe("tool");
+    expect(missState.state.guesses[0]?.category).toBeUndefined();
   });
 
   test("attribute is attached when present, regardless of category visibility", () => {
@@ -175,15 +192,98 @@ describe("the 6-guess hard cap (Phase 2.5)", () => {
   });
 });
 
+describe("submitProbe (Phase 2.5.1 Fix B)", () => {
+  const PROBE_DAY: DayData = {
+    ranks: { animal: 3, place: 40, tool: 900, feeling: 12000 },
+    forms: {},
+    categories: { animal: "animal" },
+    attributes: { place: "both are locations" },
+  };
+
+  test("adds a probe to `probes`, not `guesses`, and does not touch guessesRemaining", () => {
+    const result = submitProbe(initialGameState(), "animal", PROBE_DAY);
+    expect(result.kind).toBe("added");
+    if (result.kind !== "added") throw new Error("unreachable");
+    expect(result.state.probes).toEqual([{ word: "animal", rank: 3, category: "animal", attribute: undefined }]);
+    expect(result.state.guesses).toHaveLength(0);
+    expect(guessesRemaining(result.state)).toBe(MAX_GUESSES);
+    expect(result.band).toBe("bright-green");
+  });
+
+  test("a probe gets category/attribute exactly like a real guess would", () => {
+    const result = submitProbe(initialGameState(), "place", PROBE_DAY);
+    expect(result.kind).toBe("added");
+    if (result.kind !== "added") throw new Error("unreachable");
+    expect(result.state.probes[0]?.attribute).toBe("both are locations");
+  });
+
+  test("each probe word can be used at most once: a second submission of the same word is rejected", () => {
+    const afterFirst = submitProbe(initialGameState(), "animal", PROBE_DAY).state;
+    const result = submitProbe(afterFirst, "animal", PROBE_DAY);
+    expect(result.kind).toBe("already-used");
+    expect(result.state).toEqual(afterFirst);
+    expect(result.state.probes).toHaveLength(1);
+  });
+
+  test("different probe words can each be used once, independently", () => {
+    let state = submitProbe(initialGameState(), "animal", PROBE_DAY).state;
+    state = submitProbe(state, "place", PROBE_DAY).state;
+    expect(state.probes.map((p) => p.word)).toEqual(["animal", "place"]);
+  });
+
+  test("a probe word not in today's ranks is not-in-dictionary and not recorded", () => {
+    const start = initialGameState();
+    const result = submitProbe(start, "feeling", { ranks: {}, forms: {}, categories: {}, attributes: {} });
+    expect(result.kind).toBe("not-in-dictionary");
+    expect(result.state).toEqual(start);
+  });
+
+  test("a probe landing rank 1 still wins the game", () => {
+    const result = submitProbe(initialGameState(), "animal", { ranks: { animal: 1 }, forms: {}, categories: {}, attributes: {} });
+    expect(result.kind).toBe("added");
+    if (result.kind !== "added") throw new Error("unreachable");
+    expect(result.state.won).toBe(true);
+  });
+
+  test("probes are excluded from the share string (checked at the share.ts layer: only guesses are ever passed to buildShareString)", () => {
+    // This is really an integration invariant enforced by call sites
+    // (Game.tsx passes game.guesses, never game.probes, to buildShareString);
+    // documented here since it's a Phase 2.5.1 requirement, and see
+    // lib/share.test.ts for the string-building behavior itself.
+    const result = submitProbe(initialGameState(), "animal", PROBE_DAY);
+    expect(result.kind).toBe("added");
+    if (result.kind !== "added") throw new Error("unreachable");
+    expect(result.state.guesses).toHaveLength(0); // nothing here for a share string to pick up
+  });
+});
+
+describe("dismissProbePanel", () => {
+  test("sets probePanelDismissed true", () => {
+    expect(dismissProbePanel(initialGameState()).probePanelDismissed).toBe(true);
+  });
+
+  test("is idempotent (returns an equal state if already dismissed)", () => {
+    const dismissed = dismissProbePanel(initialGameState());
+    expect(dismissProbePanel(dismissed)).toEqual(dismissed);
+  });
+});
+
 describe("bestRank", () => {
-  test("undefined with no guesses", () => {
+  test("undefined with nothing guessed or probed", () => {
     expect(bestRank(initialGameState())).toBeUndefined();
   });
 
-  test("the minimum rank across all guesses", () => {
+  test("the minimum rank across all real guesses", () => {
     let state = submitGuess(initialGameState(), "banana", DAY).state;
     state = submitGuess(state, "recharge", DAY).state;
     expect(bestRank(state)).toBe(3);
+  });
+
+  test("includes probes: a probe's rank can set the best, per the kickoff's 'exactly like a real guess' framing", () => {
+    const probeDay: DayData = { ranks: { animal: 2 }, forms: {}, categories: {}, attributes: {} };
+    let state = submitGuess(initialGameState(), "banana", DAY).state;
+    state = submitProbe(state, "animal", probeDay).state;
+    expect(bestRank(state)).toBe(2);
   });
 });
 
@@ -275,12 +375,14 @@ describe("determinism", () => {
     // banana (after win, no-op per the game-over guard).
     const final = runSequence();
     expect(final).toEqual({
-      version: 2,
+      version: 3,
       guesses: [
         { word: "charge", rank: 2, category: undefined, attribute: "both involve electricity" },
         { word: "recharge", rank: 3, category: undefined, attribute: undefined },
         { word: "battery", rank: 1, category: "appliance", attribute: undefined },
       ],
+      probes: [],
+      probePanelDismissed: false,
       won: true,
     });
   });
@@ -303,5 +405,26 @@ describe("determinism", () => {
     const second = JSON.stringify(runLosingSequence());
     expect(first).toBe(second);
     expect(isLost(runLosingSequence())).toBe(true);
+  });
+
+  test("a sequence of probes followed by guesses is also byte-identical across runs", () => {
+    const mixedDay: DayData = {
+      ranks: { animal: 40, place: 900, battery: 1 },
+      forms: {},
+      categories: {},
+      attributes: {},
+    };
+    function run(): GameState {
+      let state = initialGameState();
+      state = submitProbe(state, "animal", mixedDay).state;
+      state = submitProbe(state, "place", mixedDay).state;
+      state = submitGuess(state, "battery", mixedDay).state;
+      return state;
+    }
+    const first = JSON.stringify(run());
+    const second = JSON.stringify(run());
+    expect(first).toBe(second);
+    expect(run().probes).toHaveLength(2);
+    expect(run().guesses).toHaveLength(1);
   });
 });

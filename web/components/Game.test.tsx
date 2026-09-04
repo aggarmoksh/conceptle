@@ -19,8 +19,14 @@ const FIXED_PUZZLE = {
     wrongfour: 5003,
     wrongfive: 5004,
     wrongsix: 5005,
+    // Phase 2.5.1 Fix B: the 5 fixed probe words.
+    animal: 40,
+    place: 900,
+    tool: 1600,
+    feeling: 2000,
+    action: 2200,
   },
-  vocab_size: 11,
+  vocab_size: 16,
 };
 
 // Phase 1.5.1: matches the shape of the real pipeline's forms.json.
@@ -196,10 +202,95 @@ test("guessing the lemma then its surface form is treated as a duplicate", async
   expect(screen.getAllByText(/^(hunter|hunters)$/)).toHaveLength(1);
 });
 
-// Phase 2.5 regression: the seed panel is removed from v2.
-test("the seed word panel no longer renders", async () => {
+// Phase 2.5.1 Fix B: probe panel (reinstated seed words, budget-free).
+test("the probe panel shows on first load with the 5 fixed probe words", async () => {
   render(<Game />);
-  await screen.findByLabelText("Enter a guess");
-  expect(screen.queryByText("Try one of these to start")).not.toBeInTheDocument();
-  expect(screen.queryByText("animal")).not.toBeInTheDocument();
+  await screen.findByText("Not sure where to start?");
+  for (const word of ["animal", "place", "tool", "feeling", "action"]) {
+    expect(screen.getByRole("button", { name: word })).toBeInTheDocument();
+  }
+});
+
+test("a probe does not decrement guesses remaining", async () => {
+  const user = userEvent.setup();
+  render(<Game />);
+
+  expect(await screen.findByText("6/6")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "animal" }));
+  await screen.findByText("40"); // the probe's rank rendered in the list
+  expect(screen.getByText("6/6")).toBeInTheDocument();
+});
+
+test("each probe button disappears after use and cannot be clicked again", async () => {
+  const user = userEvent.setup();
+  render(<Game />);
+
+  await screen.findByText("Not sure where to start?");
+  await user.click(screen.getByRole("button", { name: "animal" }));
+  await screen.findByText("40");
+
+  expect(screen.queryByRole("button", { name: "animal" })).not.toBeInTheDocument();
+  // The other 4 remain available.
+  for (const word of ["place", "tool", "feeling", "action"]) {
+    expect(screen.getByRole("button", { name: word })).toBeInTheDocument();
+  }
+});
+
+test("a probe row is visually distinguished (outlined) and labeled, and is excluded from the share string", async () => {
+  const user = userEvent.setup();
+  render(<Game />);
+
+  await screen.findByText("Not sure where to start?");
+  await user.click(screen.getByRole("button", { name: "animal" }));
+  await screen.findByText("40");
+
+  // Outlined style: a border color, not a solid rank-band background fill.
+  const probeRow = screen.getByText("animal").closest("li")!;
+  const inlineStyle = probeRow.getAttribute("style") ?? "";
+  expect(inlineStyle).toContain("border-color");
+  expect(inlineStyle).not.toContain("background");
+  expect(screen.getByText("probe")).toBeInTheDocument();
+
+  await submitGuessByTyping(user, "kitchen");
+  const shareButton = await screen.findByRole("button", { name: /share/i });
+  await user.click(shareButton);
+  const copied = await navigator.clipboard.readText();
+  expect(copied).not.toContain("animal");
+  expect(copied).toBe("Conceptle #1  1/6\n🟪\nconceptle.com"); // only the 1 real guess, no probe square
+});
+
+test("the probe panel does not reappear after explicit dismissal", async () => {
+  const user = userEvent.setup();
+  render(<Game />);
+
+  await screen.findByText("Not sure where to start?");
+  await user.click(screen.getByRole("button", { name: "Dismiss suggestions" }));
+  expect(screen.queryByText("Not sure where to start?")).not.toBeInTheDocument();
+
+  // Still gone after further interaction (e.g. a probe use would have no
+  // panel left to dismiss again, but a real guess shouldn't resurrect it).
+  await submitGuessByTyping(user, "sink");
+  expect(screen.queryByText("Not sure where to start?")).not.toBeInTheDocument();
+});
+
+test("the probe panel does not reappear after the first real guess, even without explicit dismissal", async () => {
+  const user = userEvent.setup();
+  render(<Game />);
+
+  await screen.findByText("Not sure where to start?");
+  await submitGuessByTyping(user, "sink");
+  expect(screen.queryByText("Not sure where to start?")).not.toBeInTheDocument();
+});
+
+test("multiple probes can be used in sequence without the panel disappearing early", async () => {
+  const user = userEvent.setup();
+  render(<Game />);
+
+  await screen.findByText("Not sure where to start?");
+  await user.click(screen.getByRole("button", { name: "animal" }));
+  await screen.findByText("40");
+  expect(screen.getByText("Not sure where to start?")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "place" }));
+  await screen.findByText("900");
+  expect(screen.getByText("Not sure where to start?")).toBeInTheDocument();
 });

@@ -47,6 +47,14 @@ export function announcementForAdded(
   return text;
 }
 
+/** Phase 2.5.1: a probe result, announced with a "Probe: " prefix so a
+ *  screen reader user gets the same free-vs-real distinction sighted
+ *  players get from the outlined row style. Otherwise identical to a real
+ *  guess's announcement (same rank/category/attribute/temperature shape). */
+export function announcementForProbe(word: string, rank: number, category?: string, attribute?: string): string {
+  return `Probe: ${announcementForAdded(word, rank, category, attribute)}`;
+}
+
 export function announcementForDuplicate(word: string): string {
   return `${word}, already guessed`;
 }

@@ -5,12 +5,15 @@ import { parseDayOverride, resolveDayNumber } from "@/lib/day";
 import { normalizeGuess } from "@/lib/guess";
 import {
   bestRank,
+  dismissProbePanel,
   guessesRemaining,
   initialGameState,
   isLost,
   submitGuess,
+  submitProbe,
   type DayData,
   type GameState,
+  type ProbeWord,
   type SubmitResult,
 } from "@/lib/gameReducer";
 import { fetchForms, type FormMap } from "@/lib/forms";
@@ -24,10 +27,12 @@ import {
   announcementForDuplicate,
   announcementForLost,
   announcementForNotInDictionary,
+  announcementForProbe,
 } from "@/lib/announce";
 import { GuessInput } from "./GuessInput";
 import { GuessesRemaining } from "./GuessesRemaining";
 import { GuessList } from "./GuessList";
+import { ProbePanel } from "./ProbePanel";
 import { Thermometer } from "./Thermometer";
 import { WinPanel } from "./WinPanel";
 import { LosePanel } from "./LosePanel";
@@ -109,6 +114,22 @@ export function Game() {
     return result.kind;
   }
 
+  function handleProbe(word: ProbeWord) {
+    if (load.status !== "ready") return;
+    const result = submitProbe(game, word, load.day);
+    setGame(result.state);
+    if (result.kind === "added") {
+      const last = result.state.probes.at(-1)!;
+      setAnnouncement(announcementForProbe(last.word, last.rank, last.category, last.attribute));
+    }
+    // "already-used"/"not-in-dictionary": the button is only ever offered
+    // once (see ProbePanel), so these are defensive no-ops in practice.
+  }
+
+  function handleDismissProbePanel() {
+    setGame((prev) => dismissProbePanel(prev));
+  }
+
   if (load.status === "loading") {
     return (
       <main className="flex min-h-dvh items-center justify-center">
@@ -124,6 +145,10 @@ export function Game() {
   const best = bestRank(game);
   const lost = isLost(game);
   const target = game.won || lost ? decodeTargetHint(load.puzzle.target_hint) : null;
+  // Panel visible before any real guess, until dismissed; unaffected by
+  // probes themselves so a player can use several in a row (Phase 2.5.1).
+  const showProbePanel = !game.probePanelDismissed && game.guesses.length === 0;
+  const usedProbes = new Set(game.probes.map((p) => p.word as ProbeWord));
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-lg flex-col gap-4 px-4 py-6">
@@ -133,6 +158,10 @@ export function Game() {
       </header>
 
       {showStorageNotice && <StorageNotice onDismiss={() => setShowStorageNotice(false)} />}
+
+      {showProbePanel && (
+        <ProbePanel usedProbes={usedProbes} onProbeClick={handleProbe} onDismiss={handleDismissProbePanel} />
+      )}
 
       <Thermometer best={best} />
 
@@ -157,7 +186,7 @@ export function Game() {
         </div>
       )}
 
-      <GuessList guesses={game.guesses} />
+      <GuessList guesses={game.guesses} probes={game.probes} />
 
       {/* Requirement 10: ARIA live region announcing each guess result. */}
       <div aria-live="polite" role="status" className="sr-only">

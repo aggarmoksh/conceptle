@@ -6,10 +6,20 @@
  */
 export type CategoryMap = Record<string, string>;
 
-/** Category is only shown for a close-enough guess, per the v2 spec:
- *  "Category tag ... shown ONLY if rank <= 500". A named constant rather
- *  than a magic number so the threshold has one place to change. */
-export const CATEGORY_VISIBILITY_RANK_THRESHOLD = 500;
+/**
+ * Category is only shown for a close-enough guess. Raised from 500 to 2500
+ * in Phase 2.5.1: playtest showed that on hard targets most early guesses
+ * land between 900 and 4000, so the original 500-rank gate meant players
+ * got no directional signal at all until they had already found the
+ * neighborhood by luck. 2500 still withholds tags from hopeless guesses
+ * while telling a player which hemisphere they are in. A named constant
+ * rather than a magic number so the threshold has one place to change.
+ *
+ * Attribute phrases are NOT gated by any rank threshold (see lib/
+ * attributes.ts's lookupAttribute): they show whenever an attribute exists
+ * for that (target, guess) pair, unchanged by this fix.
+ */
+export const CATEGORY_VISIBILITY_RANK_THRESHOLD = 2500;
 
 export function shouldShowCategory(rank: number): boolean {
   return rank <= CATEGORY_VISIBILITY_RANK_THRESHOLD;
