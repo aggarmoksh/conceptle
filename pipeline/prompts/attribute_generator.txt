@@ -9,30 +9,64 @@ property the TARGET and the CANDIDATE share, and if so, phrase it in 2 to 4
 words.
 
 Rules:
-1. The phrase must describe what BOTH words share, never describe the
+
+1. SYMMETRY (the most common way this goes wrong): the phrase must describe
+   a property BOTH the target and the candidate possess INDEPENDENTLY of
+   each other, not a relationship where one acts on, produces, or defines
+   the other. Before finalizing any phrase, test it by rewriting it as
+   "target is/does X, and candidate is/does X" using the phrase's own verb
+   or adjective. If that rewritten sentence sounds false, circular, or
+   nonsensical for one side, reject the phrase and omit the candidate (or
+   find a genuinely symmetric one instead).
+   PASS: refrigerator / cupboard / "both store food" -> "refrigerator
+   stores food, and cupboard stores food": true of both.
+   PASS: guitar / drum / "both musical instruments" -> "guitar is a
+   musical instrument, and drum is a musical instrument": true of both.
+   FAIL: sponge / water / "absorbs liquid" -> "sponge absorbs liquid, and
+   water absorbs liquid": false, water does not absorb, it IS the liquid
+   being absorbed. This is a one-directional relationship, not a shared
+   property.
+   FAIL: camera / picture / "captures images" -> "camera captures images,
+   and picture captures images": false, a picture is the thing captured,
+   it does not itself capture anything.
+   A phrase describing what the candidate IS TO the target ("part of X",
+   "used to make X", "produced by X") almost always fails this test even
+   when it reads smoothly. When in doubt, apply the test literally before
+   deciding.
+
+2. The phrase must describe what BOTH words share, never describe the
    target alone.
    Good: "both are storage" (target: refrigerator, candidate: cupboard)
    Good: "both keep food cold" (target: refrigerator, candidate: freezer)
    Bad: "is a beauty product" (describes only the target, ignores the candidate)
    Bad: "black liquid brushed on lashes" (this is a definition of the
    target itself, not a property the candidate also has)
-2. Generality: the phrase must plausibly describe at least 20 other words
+
+3. Generality: the phrase must plausibly describe at least 20 other words
    in an everyday English vocabulary this size, not just the target and a
-   handful of close synonyms. "both are storage" fits dozens of words
-   (box, cupboard, warehouse, wallet, ...); "keeps milk at 4 degrees Celsius"
-   fits almost nothing else. If you are not confident a phrase clears this
-   bar, omit the candidate instead of writing a narrower phrase.
-3. Length: 2 to 4 words, absolute limit. Neutral, factual tone. No
+   handful of close synonyms.
+   PASS: "both are storage" fits dozens of words (box, cupboard, warehouse,
+   wallet, ...).
+   PASS: "both are tools" fits hundreds of words.
+   FAIL: "both slang for guitar" fits fewer than 5 words in existence, let
+   alone this vocabulary.
+   FAIL: "keeps milk at 4 degrees Celsius" fits almost nothing else.
+   If you are not confident a phrase clears this bar, omit the candidate
+   instead of writing a narrower phrase.
+
+4. Length: 2 to 4 words, absolute limit. Neutral, factual tone. No
    marketing language, no emoji, no exclamation points.
-4. If no meaningful, genuine, general shared attribute exists between the
-   target and a candidate, do not include that candidate in your output at
-   all. Omitting most candidates is correct and expected: only include a
-   candidate when you have a real, specific-but-not-too-specific shared
-   attribute in mind, not a vague or forced one.
-5. Only use candidate words from the given list, spelled exactly as given.
+
+5. If no meaningful, genuine, general, SYMMETRIC shared attribute exists
+   between the target and a candidate, do not include that candidate in
+   your output at all. Omitting most candidates is correct and expected:
+   only include a candidate when you have a real attribute in mind that
+   passes rules 1 and 3, not a vague, forced, or one-directional one.
+
+6. Only use candidate words from the given list, spelled exactly as given.
    Never invent a candidate that was not given to you.
 
 Return a JSON object with a single field "attributes": an array of
 {"word": ..., "phrase": ...} pairs, one per candidate you decided has a
-genuine shared attribute with the target. Simply omit every candidate you
-did not find a good phrase for.
+genuine, symmetric, general shared attribute with the target. Simply omit
+every candidate you did not find a good phrase for.
