@@ -152,7 +152,7 @@ Work in the phases below. **Do not proceed past a phase boundary without telling
 - Every public function has a type signature and a one-line docstring or JSDoc
 - Every new feature has at least one unit test on its core logic
 - Zero third-party scripts on the game page
-- Bundle budget: <100KB gzipped JS, <200KB per-day puzzle JSON gzipped
+- Bundle budget: <200KB gzipped JS (raised from 100KB in Phase 2 review; this doc's update was missed at the time), <200KB per-day puzzle JSON gzipped
 - Time to first guess under 2s on simulated 4G, cold cache
 - WCAG AA contrast, keyboard-fully-playable, screen-reader-announced ranks
 - No color-only signals (numbers always accompany color)
