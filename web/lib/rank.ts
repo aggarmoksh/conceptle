@@ -54,3 +54,21 @@ export function rankToThermometerPosition(rank: number): number {
   const position = 1 - Math.log10(clamped) / Math.log10(THERMOMETER_RANK_CAP);
   return Math.min(Math.max(position, 0), 1);
 }
+
+/**
+ * The n closest words to today's target, by rank ascending. Used for the
+ * lose-state "see how close you were" learning moment (Phase 2.5): rank 1
+ * (the target itself) is included, since it's literally the closest word
+ * and the lose screen already reveals the target separately as its own,
+ * more prominent element -- this list is the full "here's what was close"
+ * picture, not a spoiler-avoidance mechanism.
+ */
+export function topRankedWords(
+  ranks: Record<string, number>,
+  n: number,
+): { word: string; rank: number }[] {
+  return Object.entries(ranks)
+    .map(([word, rank]) => ({ word, rank }))
+    .sort((a, b) => a.rank - b.rank)
+    .slice(0, n);
+}

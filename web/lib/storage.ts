@@ -38,12 +38,16 @@ export function saveGameState(day: number, state: GameState): void {
   }
 }
 
+/**
+ * v2 migration (Phase 2.5): a v1 save has `seedDismissed` and no `version`
+ * field; a v2 save has `version: 2` and no hard-cap-unaware shape. Checking
+ * `version === 2` here is the entire migration: a v1 object fails this
+ * check, loadGameState returns null, and the caller starts a fresh v2 game
+ * for that day. Per the kickoff: "we're pre-launch, no real player data is
+ * being lost," so silently discarding is correct, not a bug.
+ */
 function isGameState(value: unknown): value is GameState {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
-  return (
-    Array.isArray(v.guesses) &&
-    typeof v.won === "boolean" &&
-    typeof v.seedDismissed === "boolean"
-  );
+  return v.version === 2 && Array.isArray(v.guesses) && typeof v.won === "boolean";
 }

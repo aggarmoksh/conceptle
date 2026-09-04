@@ -5,32 +5,39 @@ import { parseDayOverride, resolveDayNumber } from "@/lib/day";
 import { normalizeGuess } from "@/lib/guess";
 import {
   bestRank,
-  dismissSeedPanel,
+  guessesRemaining,
   initialGameState,
+  isLost,
   submitGuess,
+  type DayData,
   type GameState,
   type SubmitResult,
 } from "@/lib/gameReducer";
 import { fetchForms, type FormMap } from "@/lib/forms";
+import { fetchCategories, type CategoryMap } from "@/lib/categories";
+import { fetchAttributes, type AttributeMap } from "@/lib/attributes";
 import { decodeTargetHint, fetchPuzzle, type PuzzleData } from "@/lib/puzzle";
+import { loseMessageForBestRank } from "@/lib/loseMessage";
 import { isStorageAvailable, loadGameState, saveGameState } from "@/lib/storage";
 import {
   announcementForAdded,
   announcementForDuplicate,
+  announcementForLost,
   announcementForNotInDictionary,
 } from "@/lib/announce";
 import { GuessInput } from "./GuessInput";
+import { GuessesRemaining } from "./GuessesRemaining";
 import { GuessList } from "./GuessList";
 import { Thermometer } from "./Thermometer";
-import { SeedPanel } from "./SeedPanel";
 import { WinPanel } from "./WinPanel";
+import { LosePanel } from "./LosePanel";
 import { ErrorScreen } from "./ErrorScreen";
 import { StorageNotice } from "./StorageNotice";
 
 type LoadState =
   | { status: "loading" }
   | { status: "error" }
-  | { status: "ready"; puzzle: PuzzleData };
+  | { status: "ready"; puzzle: PuzzleData; day: DayData };
 
 export function Game() {
   // Resolved once per mount; a puzzle day never changes under a live tab, and
@@ -45,20 +52,19 @@ export function Game() {
 
   const [load, setLoad] = useState<LoadState>({ status: "loading" });
   const [game, setGame] = useState<GameState>(initialGameState());
-  const [forms, setForms] = useState<FormMap>({});
   const [announcement, setAnnouncement] = useState("");
   const [storageAvailable, setStorageAvailable] = useState(true);
   const [showStorageNotice, setShowStorageNotice] = useState(false);
 
   const loadPuzzle = useCallback(() => {
     setLoad({ status: "loading" });
-    // forms.json is a correctness improvement (Phase 1.5.1), not a hard
-    // dependency like the puzzle itself: fetchForms() never rejects, so a
-    // failure there can't turn into a spurious full-page error here.
-    Promise.all([fetchPuzzle(day), fetchForms()])
-      .then(([puzzle, formMap]) => {
-        setLoad({ status: "ready", puzzle });
-        setForms(formMap);
+    // categories.json, forms.json, and today's attribute file are all
+    // correctness/feedback enhancements, not hard dependencies like the
+    // puzzle itself: each of their fetchers degrades to {} on failure, so a
+    // failure in any of them can't turn into a spurious full-page error here.
+    Promise.all([fetchPuzzle(day), fetchForms(), fetchCategories(), fetchAttributes(day)])
+      .then(([puzzle, forms, categories, attributes]) => {
+        setLoad({ status: "ready", puzzle, day: { ranks: puzzle.ranks, forms, categories, attributes } });
         const available = isStorageAvailable();
         setStorageAvailable(available);
         setShowStorageNotice(!available);
@@ -84,23 +90,23 @@ export function Game() {
 
   function handleSubmit(raw: string): SubmitResult["kind"] {
     if (load.status !== "ready") return "empty";
-    const result = submitGuess(game, raw, load.puzzle.ranks, forms);
+    const result = submitGuess(game, raw, load.day);
     setGame(result.state);
 
     const normalized = normalizeGuess(raw);
     if (result.kind === "added") {
       const last = result.state.guesses.at(-1)!;
-      setAnnouncement(announcementForAdded(last.word, last.rank));
+      if (isLost(result.state)) {
+        setAnnouncement(announcementForLost(loseMessageForBestRank(bestRank(result.state)!)));
+      } else {
+        setAnnouncement(announcementForAdded(last.word, last.rank, last.category, last.attribute));
+      }
     } else if (result.kind === "duplicate") {
       setAnnouncement(announcementForDuplicate(normalized));
     } else if (result.kind === "not-in-dictionary") {
       setAnnouncement(announcementForNotInDictionary(normalized));
     }
     return result.kind;
-  }
-
-  function handleDismissSeedPanel() {
-    setGame((prev) => dismissSeedPanel(prev));
   }
 
   if (load.status === "loading") {
@@ -115,8 +121,9 @@ export function Game() {
     return <ErrorScreen onRetry={loadPuzzle} />;
   }
 
-  const showSeedPanel = !game.seedDismissed && game.guesses.length === 0;
   const best = bestRank(game);
+  const lost = isLost(game);
+  const target = game.won || lost ? decodeTargetHint(load.puzzle.target_hint) : null;
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-lg flex-col gap-4 px-4 py-6">
@@ -127,19 +134,27 @@ export function Game() {
 
       {showStorageNotice && <StorageNotice onDismiss={() => setShowStorageNotice(false)} />}
 
-      {showSeedPanel && (
-        <SeedPanel onSeedClick={(word) => handleSubmit(word)} onDismiss={handleDismissSeedPanel} />
-      )}
-
       <Thermometer best={best} />
 
-      {game.won ? (
-        <WinPanel
-          target={decodeTargetHint(load.puzzle.target_hint)}
-          guessCount={game.guesses.length}
+      {game.won && target !== null && <WinPanel target={target} day={day} guesses={game.guesses} />}
+
+      {lost && target !== null && (
+        <LosePanel
+          target={target}
+          day={day}
+          guesses={game.guesses}
+          bestRank={best!}
+          ranks={load.puzzle.ranks}
         />
-      ) : (
-        <GuessInput onSubmit={handleSubmit} />
+      )}
+
+      {!game.won && !lost && (
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <GuessInput onSubmit={handleSubmit} />
+          </div>
+          <GuessesRemaining remaining={guessesRemaining(game)} />
+        </div>
       )}
 
       <GuessList guesses={game.guesses} />

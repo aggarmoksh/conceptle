@@ -5,57 +5,144 @@ import { Game } from "./Game";
 const FIXED_PUZZLE = {
   day: 1,
   target_hint: Buffer.from("kitchen").toString("base64"),
-  ranks: { kitchen: 1, sink: 2, tile: 300, hunter: 10 },
-  vocab_size: 4,
+  ranks: {
+    kitchen: 1,
+    sink: 2,
+    tile: 300,
+    hunter: 10,
+    // All-letters and mutually distinct after normalizeGuess (which strips
+    // digits) -- "wrong1".."wrong6" would all collapse to the same "wrong"
+    // string and silently break these tests.
+    wrongone: 5000,
+    wrongtwo: 5001,
+    wrongthree: 5002,
+    wrongfour: 5003,
+    wrongfive: 5004,
+    wrongsix: 5005,
+  },
+  vocab_size: 11,
 };
 
 // Phase 1.5.1: matches the shape of the real pipeline's forms.json.
 const FIXED_FORMS = { hunters: "hunter" };
+// Phase 2.5: category/attribute fixtures.
+const FIXED_CATEGORIES = { sink: "appliance" };
+const FIXED_ATTRIBUTES = { day: 1, attributes: { sink: "both hold water" } };
 
-beforeEach(() => {
-  window.localStorage.clear();
+function mockFetch() {
   global.fetch = jest.fn((input: RequestInfo | URL) => {
     const url = String(input);
     if (url.includes("forms.json")) {
       return Promise.resolve({ ok: true, json: async () => FIXED_FORMS });
     }
+    if (url.includes("categories.json")) {
+      return Promise.resolve({ ok: true, json: async () => FIXED_CATEGORIES });
+    }
+    if (url.includes("/attributes/")) {
+      return Promise.resolve({ ok: true, json: async () => FIXED_ATTRIBUTES });
+    }
     return Promise.resolve({ ok: true, json: async () => FIXED_PUZZLE });
   }) as unknown as typeof fetch;
+}
+
+beforeEach(() => {
+  window.localStorage.clear();
+  mockFetch();
+  // No manual clipboard mock needed: @testing-library/user-event's setup()
+  // installs its own fully-functional Clipboard stub on navigator.clipboard
+  // (real writeText/readText backed by an in-memory store) the moment
+  // userEvent.setup() runs in each test below. Installing a competing
+  // jest.fn()-based mock here gets silently overwritten by that stub, so
+  // ShareButton's writeText calls are verified by reading the real stub back
+  // via navigator.clipboard.readText() instead of a mock call assertion.
 });
 
 afterEach(() => {
   jest.restoreAllMocks();
 });
 
+async function submitGuessByTyping(user: ReturnType<typeof userEvent.setup>, word: string) {
+  const input = await screen.findByLabelText("Enter a guess");
+  await user.type(input, word);
+  await user.keyboard("{Enter}");
+}
+
 test("guessing rank 1 transitions the game into the win state", async () => {
   const user = userEvent.setup();
   render(<Game />);
 
-  const input = await screen.findByLabelText("Enter a guess");
-
-  // A non-winning guess first, so "Solved in N guesses" has something to count.
-  await user.type(input, "sink");
-  await user.keyboard("{Enter}");
+  // A non-winning guess first, so "Solved in N/6" has something to count.
+  await submitGuessByTyping(user, "sink");
   expect(screen.queryByTestId("revealed-target")).not.toBeInTheDocument();
 
-  await user.type(input, "kitchen");
-  await user.keyboard("{Enter}");
+  await submitGuessByTyping(user, "kitchen");
 
   expect(await screen.findByTestId("revealed-target")).toHaveTextContent("kitchen");
-  expect(screen.getByText("Solved in 2 guesses")).toBeInTheDocument();
+  expect(screen.getByText("Solved in 2/6")).toBeInTheDocument();
   expect(screen.queryByLabelText("Enter a guess")).not.toBeInTheDocument();
 
   const shareButton = screen.getByRole("button", { name: /share/i });
-  expect(shareButton).toBeDisabled();
+  expect(shareButton).not.toBeDisabled();
+});
+
+test("the share button copies a leak-free share string on win", async () => {
+  const user = userEvent.setup();
+  render(<Game />);
+
+  await submitGuessByTyping(user, "kitchen");
+  const shareButton = await screen.findByRole("button", { name: /share/i });
+  await user.click(shareButton);
+
+  const copied = await navigator.clipboard.readText();
+  expect(copied).toContain("Conceptle #1  1/6");
+  expect(copied).not.toContain("kitchen"); // no category/attribute/target leaks
+  expect(await screen.findByText("Copied to clipboard")).toBeInTheDocument();
+});
+
+test("losing after 6 wrong guesses shows the lose state with a live share button", async () => {
+  const user = userEvent.setup();
+  render(<Game />);
+
+  for (const word of ["wrongone", "wrongtwo", "wrongthree", "wrongfour", "wrongfive", "wrongsix"]) {
+    await submitGuessByTyping(user, word);
+  }
+
+  expect(await screen.findByTestId("revealed-target")).toHaveTextContent("kitchen");
+  expect(screen.queryByLabelText("Enter a guess")).not.toBeInTheDocument();
+  // wrongsix is rank 5005, best rank overall is wrongone at 5000: "tough one" tier.
+  expect(screen.getByText("Tough one today. See you tomorrow, we all get one.")).toBeInTheDocument();
+  expect(screen.getByText("See how close you were")).toBeInTheDocument();
+  // "kitchen" appears twice: once as the revealed target, once as rank 1 in
+  // the top-10 learning-moment list.
+  expect(screen.getAllByText("kitchen")).toHaveLength(2);
+
+  const shareButton = screen.getByRole("button", { name: /share/i });
+  await user.click(shareButton);
+  const copied = await navigator.clipboard.readText();
+  expect(copied).toContain("Conceptle #1  X/6");
+});
+
+test("guesses-remaining counts down and disappears once the game ends", async () => {
+  const user = userEvent.setup();
+  render(<Game />);
+
+  expect(await screen.findByText("6/6")).toBeInTheDocument();
+  await submitGuessByTyping(user, "sink");
+  expect(await screen.findByText("5/6")).toBeInTheDocument();
+
+  await submitGuessByTyping(user, "kitchen");
+  // Query by the GuessesRemaining component's own aria-label, not a bare
+  // "/6" text match: "Solved in 2/6" also ends in "/6" and would otherwise
+  // give a false negative here.
+  expect(screen.queryByLabelText(/guesses remaining/)).not.toBeInTheDocument();
 });
 
 test("a duplicate guess shows an inline message and does not clear the input", async () => {
   const user = userEvent.setup();
   render(<Game />);
 
+  await submitGuessByTyping(user, "sink");
   const input = await screen.findByLabelText("Enter a guess");
-  await user.type(input, "sink");
-  await user.keyboard("{Enter}");
   await user.type(input, "sink");
   await user.keyboard("{Enter}");
 
@@ -75,14 +162,21 @@ test("a guess not in today's dictionary shows an inline message and does not cle
   expect(input).toHaveValue("zzznotaword");
 });
 
+test("a guess row shows its category chip and attribute phrase when present", async () => {
+  const user = userEvent.setup();
+  render(<Game />);
+
+  await submitGuessByTyping(user, "sink");
+  expect(await screen.findByText("appliance")).toBeInTheDocument();
+  expect(screen.getByText("both hold water")).toBeInTheDocument();
+});
+
 // Phase 1.5.1 regression tests.
 test("a surface form not itself in the rank table resolves via forms.json to its lemma's rank", async () => {
   const user = userEvent.setup();
   render(<Game />);
 
-  const input = await screen.findByLabelText("Enter a guess");
-  await user.type(input, "hunters");
-  await user.keyboard("{Enter}");
+  await submitGuessByTyping(user, "hunters");
 
   // Displayed word is the surface form the player typed; rank is hunter's (10).
   expect(await screen.findByText("hunters")).toBeInTheDocument();
@@ -94,13 +188,18 @@ test("guessing the lemma then its surface form is treated as a duplicate", async
   const user = userEvent.setup();
   render(<Game />);
 
-  const input = await screen.findByLabelText("Enter a guess");
-  await user.type(input, "hunter");
-  await user.keyboard("{Enter}");
-  await user.type(input, "hunters");
-  await user.keyboard("{Enter}");
+  await submitGuessByTyping(user, "hunter");
+  await submitGuessByTyping(user, "hunters");
 
   expect(screen.getByText("already guessed")).toBeInTheDocument();
   // Only one row in the guess list, not two.
   expect(screen.getAllByText(/^(hunter|hunters)$/)).toHaveLength(1);
+});
+
+// Phase 2.5 regression: the seed panel is removed from v2.
+test("the seed word panel no longer renders", async () => {
+  render(<Game />);
+  await screen.findByLabelText("Enter a guess");
+  expect(screen.queryByText("Try one of these to start")).not.toBeInTheDocument();
+  expect(screen.queryByText("animal")).not.toBeInTheDocument();
 });

@@ -1,4 +1,4 @@
-import { lookupRank, rankToBand, rankToThermometerPosition } from "./rank";
+import { lookupRank, rankToBand, rankToThermometerPosition, topRankedWords } from "./rank";
 
 describe("rankToBand", () => {
   test("rank 1 is gold", () => {
@@ -57,5 +57,25 @@ describe("rankToThermometerPosition", () => {
     const p3 = rankToThermometerPosition(9999);
     expect(p1).toBeGreaterThan(p2);
     expect(p2).toBeGreaterThan(p3);
+  });
+});
+
+describe("topRankedWords", () => {
+  const ranks = { target: 1, second: 2, third: 3, far: 5000 };
+
+  test("returns entries sorted by rank ascending, including rank 1", () => {
+    expect(topRankedWords(ranks, 3)).toEqual([
+      { word: "target", rank: 1 },
+      { word: "second", rank: 2 },
+      { word: "third", rank: 3 },
+    ]);
+  });
+
+  test("truncates to n even when more words are available", () => {
+    expect(topRankedWords(ranks, 2)).toHaveLength(2);
+  });
+
+  test("returns fewer than n if the ranks table is smaller than n", () => {
+    expect(topRankedWords({ only: 1 }, 10)).toEqual([{ word: "only", rank: 1 }]);
   });
 });
