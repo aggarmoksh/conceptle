@@ -22,3 +22,7 @@ web/*.tsbuildinfo
 Thumbs.db
 .vscode/
 .idea/
+
+# Internal dev-verification screenshots (not part of the public repo)
+screenshots-phase25/
+screenshots-phase251/
